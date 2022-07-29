@@ -97,9 +97,15 @@ const App: React.FC = () => {
 
   return (
     <div
-      className='flex-column'
+      className='container flex-column'
     >
       {getBoardRows().map(row => row)}
+      <div
+        className='buttons flex-column'
+      >
+        <button>Solve</button>
+        <button>Visualize</button>
+      </div>
     </div>
   )
 }
