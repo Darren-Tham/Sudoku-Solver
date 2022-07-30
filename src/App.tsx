@@ -1,41 +1,76 @@
-import React from 'react'
+import React, { useState, useEffect, createRef } from 'react'
+import Block from './components/Block'
 import './App.css'
 
 const SIZE = 3
-const NUMS = SIZE ** 2
+export const NUMS = SIZE ** 2
 
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
 
-interface Border {
+export interface Border {
   borderTop: string;
   borderLeft: string;
   borderBottom?: string;
   borderRight?: string;
 }
 
-const App: React.FC = () => {
-  const getSectionRows = (): JSX.Element[] => {
+const App: React.FC = (): JSX.Element => {
+  const [blocks, setBlocks] = useState<JSX.Element[]>([])
+  const [inputRefs, setInputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>([])
+
+  useEffect(() => {  
+    setInitialState()
+  }, [])
+  
+  function setInitialState(): void {
+    const initialBlocks = []
+    const initialInputRefs = new Array(SIZE).fill(null)
+      .map(() => new Array(SIZE).fill(null)
+      .map(() => new Array(SIZE).fill(null)
+      .map(() => new Array(SIZE).fill(null))))
+
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        for (let k = 0; k < SIZE; k++) {
+          for (let l = 0; l < SIZE; l++) {
+            const style: Border = {
+              borderTop: k === 0 ? '' : GRAY_BORDER,
+              borderLeft: l === 0 ? '' : GRAY_BORDER
+            }
+
+            const id = i * SIZE ** 3 + j * SIZE ** 2 + k * SIZE + l
+            const inputRef = createRef<HTMLInputElement>()
+            initialInputRefs[i][j][k][l] = inputRef
+
+            const block = <Block
+              key={id}
+              id={id.toString()}
+              val=''
+              style={style}
+              inputRef={inputRef}
+              isChangeable={true}
+            />
+
+            initialBlocks.push(block)
+          }
+        }
+      }
+    }
+
+    setBlocks(initialBlocks)
+    setInputRefs(initialInputRefs)
+  }
+  
+  function getSectionRows (boardRow: number, boardCol: number): JSX.Element[] {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
-      const blocks = []
+      const cells = []
 
       for (let j = 0; j < SIZE; j++) {
-        const style: Border = {
-          borderTop: i === 0 ? '' : GRAY_BORDER,
-          borderLeft: j === 0 ? '' : GRAY_BORDER,
-        }
-
-        const block = (
-          <div
-            key={j}
-            className='block'
-            style={style}
-          />
-        )
-
-        blocks.push(block)
+        const idx = boardRow * SIZE ** 3 + boardCol * SIZE ** 2 + i * SIZE + j
+        cells.push(blocks[idx])
       }
 
       const row = (
@@ -43,7 +78,7 @@ const App: React.FC = () => {
           key={i}
           style={{ display: 'flex' }}
         >
-          {blocks.map(block => block)}
+          {cells.map(cell => cell)}
         </div>
       )
 
@@ -53,7 +88,7 @@ const App: React.FC = () => {
     return rows
   }
   
-  const getBoardRows = (): JSX.Element[] => {
+  function getBoardRows (): JSX.Element[] {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -73,7 +108,7 @@ const App: React.FC = () => {
             className='flex-column'
             style={sectionStyle}
           >
-            {getSectionRows().map(sectionRow => sectionRow)}
+            {getSectionRows(i, j).map(sectionRow => sectionRow)}
           </div>
         )
 
@@ -95,6 +130,15 @@ const App: React.FC = () => {
     return rows
   }
 
+  function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+    const board = inputRefs
+      .map(boardRow => boardRow
+        .map(boardCol => boardCol
+          .map(sectionRow => sectionRow
+            .map(inputRef => inputRef.current?.value))))
+    console.log(board)
+  }
+
   return (
     <div
       className='container flex-column'
@@ -103,8 +147,13 @@ const App: React.FC = () => {
       <div
         className='buttons flex-column'
       >
-        <button>Solve</button>
-        <button>Visualize</button>
+        <button
+          onClick={handleClick}
+        >
+          Solve
+        </button>
+        <button
+        >Visualize</button>
       </div>
     </div>
   )
