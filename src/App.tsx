@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Block from './components/Block'
 import './App.css'
 
@@ -15,21 +15,28 @@ export interface Border {
   borderRight?: string;
 }
 
+export interface Indices {
+  boardRow: number,
+  boardCol: number,
+  sectionRow: number,
+  sectionCol: number
+}
+
 const App: React.FC = (): JSX.Element => {
   const [blocks, setBlocks] = useState<JSX.Element[]>([])
-  const [inputRefs, setInputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>([])
+  const [board, setBoard] = useState<string[][][][]>([])
 
   useEffect(() => {  
     setInitialState()
   }, [])
-  
+
   function setInitialState(): void {
     const initialBlocks = []
-    const initialInputRefs = new Array(SIZE).fill(null)
-      .map(() => new Array(SIZE).fill(null)
-      .map(() => new Array(SIZE).fill(null)
-      .map(() => new Array(SIZE).fill(null))))
-
+    const initialBoard = new Array(SIZE).fill('')
+      .map(() => new Array(SIZE).fill('')
+      .map(() => new Array(SIZE).fill('')
+      .map(() => new Array(SIZE).fill(''))))
+    
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
         for (let k = 0; k < SIZE; k++) {
@@ -40,16 +47,22 @@ const App: React.FC = (): JSX.Element => {
             }
 
             const id = i * SIZE ** 3 + j * SIZE ** 2 + k * SIZE + l
-            const inputRef = createRef<HTMLInputElement>()
-            initialInputRefs[i][j][k][l] = inputRef
+            const indices: Indices = {
+              boardRow: i,
+              boardCol: j,
+              sectionRow: k,
+              sectionCol: l
+            }
 
             const block = <Block
               key={id}
               id={id.toString()}
               val=''
               style={style}
-              inputRef={inputRef}
               isChangeable={true}
+              indices={indices}
+              board={initialBoard}
+              setBoard={setBoard}
             />
 
             initialBlocks.push(block)
@@ -59,7 +72,7 @@ const App: React.FC = (): JSX.Element => {
     }
 
     setBlocks(initialBlocks)
-    setInputRefs(initialInputRefs)
+    setBoard(initialBoard)
   }
   
   function getSectionRows (boardRow: number, boardCol: number): JSX.Element[] {
@@ -130,12 +143,7 @@ const App: React.FC = (): JSX.Element => {
     return rows
   }
 
-  function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-    const board = inputRefs
-      .map(boardRow => boardRow
-        .map(boardCol => boardCol
-          .map(sectionRow => sectionRow
-            .map(inputRef => inputRef.current?.value))))
+  function handleClick() {
     console.log(board)
   }
 
