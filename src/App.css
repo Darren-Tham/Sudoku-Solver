@@ -1,3 +1,7 @@
+:root{
+  --block-size: 50px;
+}
+
 body {  
   margin: 0;
   height: 100vh;
@@ -19,20 +23,15 @@ body {
 }
 
 input {
-  width: 50px;
-  height: 50px;
+  width: var(--block-size);
+  height: var(--block-size);
   display: inline-block;
-  background-color: white;
   border: none;
   caret-color: transparent;
   cursor: default;
   text-align: center;
   font-size: 30px;
   outline: none;
-}
-
-input:focus {
-  background-color: #cfedff;
 }
 
 .buttons {

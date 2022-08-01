@@ -5,6 +5,9 @@ import './App.css'
 const SIZE = 3
 export const NUMS = SIZE ** 2
 
+const WHITE = '#ffffff'
+const RED = '#ff928a'
+
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
 
@@ -15,75 +18,112 @@ export interface Border {
   borderRight?: string;
 }
 
-export interface Indices {
-  boardRow: number,
-  boardCol: number,
-  sectionRow: number,
-  sectionCol: number
+interface UniqueValues {
+  [key: string]: true;
 }
 
-const App: React.FC = (): JSX.Element => {
-  const [blocks, setBlocks] = useState<JSX.Element[]>([])
-  const [board, setBoard] = useState<string[][][][]>([])
+interface RowIndices {
+  boardRow: number;
+  sectionRow: number;
+}
 
-  useEffect(() => {  
-    setInitialState()
-  }, [])
+interface ColIndices {
+  boardCol: number;
+  sectionCol: number;
+}
 
-  function setInitialState(): void {
-    const initialBlocks = []
-    const initialBoard = new Array(SIZE).fill('')
-      .map(() => new Array(SIZE).fill('')
-      .map(() => new Array(SIZE).fill('')
-      .map(() => new Array(SIZE).fill(''))))
-    
+export interface Indices extends RowIndices, ColIndices {}
+
+const App: React.FC = () => {
+  const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
+  const [colors, setColors] = useState<string[][][][]>(create4DArr<string>(WHITE))
+
+  function getInvalidRows() {
+    const invalidRows: RowIndices[] = []
+
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
-        for (let k = 0; k < SIZE; k++) {
-          for (let l = 0; l < SIZE; l++) {
-            const style: Border = {
-              borderTop: k === 0 ? '' : GRAY_BORDER,
-              borderLeft: l === 0 ? '' : GRAY_BORDER
+        const uniqueValues: UniqueValues = {}
+        let isValidRow = true
+
+        for (let k = 0; k < SIZE && isValidRow; k++) {
+          for (let l = 0; l < SIZE && isValidRow; l++) {
+            const val = values[i][k][j][l]
+            if (val === '') continue
+
+            if (uniqueValues[val]) {
+              invalidRows.push({
+                boardRow: i,
+                sectionRow: j
+              })
+              isValidRow = false
+            } else {
+              uniqueValues[val] = true
             }
-
-            const id = i * SIZE ** 3 + j * SIZE ** 2 + k * SIZE + l
-            const indices: Indices = {
-              boardRow: i,
-              boardCol: j,
-              sectionRow: k,
-              sectionCol: l
-            }
-
-            const block = <Block
-              key={id}
-              id={id.toString()}
-              val=''
-              style={style}
-              isChangeable={true}
-              indices={indices}
-              board={initialBoard}
-              setBoard={setBoard}
-            />
-
-            initialBlocks.push(block)
           }
         }
       }
     }
 
-    setBlocks(initialBlocks)
-    setBoard(initialBoard)
+    return invalidRows
   }
-  
-  function getSectionRows (boardRow: number, boardCol: number): JSX.Element[] {
+
+  /*
+  function checkLocation() {
+    getInvalidRows().forEach(row => {
+      const newBlocks = blocks.slice()
+      const { boardRow, sectionRow } = row      
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          const { initialValue, border, isChangeable, indices } = newBlocks[boardRow][i][sectionRow][j].props
+          const block = <Block
+            initialValue={initialValue}
+            border={border}
+            color={RED}
+            isChangeable={isChangeable}
+            indices={indices}
+            board={values}
+            setBoard={setValues}
+          />
+          
+        }
+      }
+    })
+  }
+  */
+
+  function renderSectionRows (boardRow: number, boardCol: number) {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
-      const cells = []
+      const blocks = []
 
       for (let j = 0; j < SIZE; j++) {
-        const idx = boardRow * SIZE ** 3 + boardCol * SIZE ** 2 + i * SIZE + j
-        cells.push(blocks[idx])
+        const border: Border = {
+          borderTop: i === 0 ? '' : GRAY_BORDER,
+          borderLeft: j === 0 ? '' : GRAY_BORDER
+        }
+            
+        const indices: Indices = {
+          boardRow,
+          boardCol,
+          sectionRow: i,
+          sectionCol: j
+        }
+
+        const key = boardRow * SIZE ** 3 + boardCol * SIZE ** 2 + i * SIZE + j
+        const block = <Block
+          key={key}
+          value={values[boardRow][boardCol][i][j]}
+          border={border}
+          color={colors[boardRow][boardCol][i][j]}
+          isChangeable={true}
+          indices={indices}
+          values={values}
+          setValues={setValues}
+        />
+        
+        blocks.push(block)
       }
 
       const row = (
@@ -91,17 +131,21 @@ const App: React.FC = (): JSX.Element => {
           key={i}
           style={{ display: 'flex' }}
         >
-          {cells.map(cell => cell)}
+          {blocks.map(cell => cell)}
         </div>
       )
 
       rows.push(row)
     }
 
-    return rows
+    return (
+      <>
+        {rows.map(row => row)}
+      </>
+    )
   }
   
-  function getBoardRows (): JSX.Element[] {
+  function renderBoardRows () {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -121,7 +165,7 @@ const App: React.FC = (): JSX.Element => {
             className='flex-column'
             style={sectionStyle}
           >
-            {getSectionRows(i, j).map(sectionRow => sectionRow)}
+            {renderSectionRows(i, j)}
           </div>
         )
 
@@ -140,31 +184,33 @@ const App: React.FC = (): JSX.Element => {
       rows.push(row)
     }
 
-    return rows
+    return (
+      <>
+        {rows.map(row => row)}
+      </>
+    )
   }
 
   function handleClick() {
-    console.log(board)
+    console.log(values)
   }
 
   return (
-    <div
-      className='container flex-column'
-    >
-      {getBoardRows().map(row => row)}
-      <div
-        className='buttons flex-column'
-      >
-        <button
-          onClick={handleClick}
-        >
-          Solve
-        </button>
-        <button
-        >Visualize</button>
+    <div className='container flex-column'>
+      {renderBoardRows()}
+      <div className='buttons flex-column'>
+        <button onClick={handleClick}>Solve</button>
+        <button>Visualize</button>
       </div>
     </div>
   )
+}
+
+function create4DArr<T>(value: T): T[][][][] {
+  return new Array(SIZE).fill(value)
+    .map(() => new Array(SIZE).fill(value)
+    .map(() => new Array(SIZE).fill(value)
+    .map(() => new Array(SIZE).fill(value))))
 }
 
 export default App
