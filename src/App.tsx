@@ -5,8 +5,8 @@ import './App.css'
 const SIZE = 3
 export const NUMS = SIZE ** 2
 
-const WHITE = '#ffffff'
-const RED = '#ff928a'
+export const WHITE = '#ffffff'
+export const RED = '#ff928a'
 
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
@@ -35,8 +35,28 @@ interface ColIndices {
 export interface Indices extends RowIndices, ColIndices {}
 
 const App: React.FC = () => {
+
   const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
   const [colors, setColors] = useState<string[][][][]>(create4DArr<string>(WHITE))
+
+  useEffect(() => {
+    checkValues()
+  }, [values])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  function handleKeyDown(e: KeyboardEvent) {
+    const key = e.key.toLowerCase()
+    const disabledChars = ['a', 'b', 'o', 'p']
+    const disabledArrows = ['arrowup', 'arrowleft']
+
+    if (disabledArrows.includes(key) || e.ctrlKey && disabledChars.includes(key)) {
+      e.preventDefault()
+    }
+  }
 
   function getInvalidRows() {
     const invalidRows: RowIndices[] = []
@@ -48,17 +68,17 @@ const App: React.FC = () => {
 
         for (let k = 0; k < SIZE && isValidRow; k++) {
           for (let l = 0; l < SIZE && isValidRow; l++) {
-            const val = values[i][k][j][l]
-            if (val === '') continue
+            const value = values[i][k][j][l]
+            if (value === '') continue
 
-            if (uniqueValues[val]) {
+            if (uniqueValues[value]) {
               invalidRows.push({
                 boardRow: i,
                 sectionRow: j
               })
               isValidRow = false
             } else {
-              uniqueValues[val] = true
+              uniqueValues[value] = true
             }
           }
         }
@@ -68,29 +88,18 @@ const App: React.FC = () => {
     return invalidRows
   }
 
-  /*
-  function checkLocation() {
+  function checkValues() {
+    const newColors = create4DArr<string>(WHITE)
     getInvalidRows().forEach(row => {
-      const newBlocks = blocks.slice()
-      const { boardRow, sectionRow } = row      
+      const { boardRow, sectionRow } = row
       for (let i = 0; i < SIZE; i++) {
         for (let j = 0; j < SIZE; j++) {
-          const { initialValue, border, isChangeable, indices } = newBlocks[boardRow][i][sectionRow][j].props
-          const block = <Block
-            initialValue={initialValue}
-            border={border}
-            color={RED}
-            isChangeable={isChangeable}
-            indices={indices}
-            board={values}
-            setBoard={setValues}
-          />
-          
+          newColors[boardRow][i][sectionRow][j] = RED
         }
       }
     })
+    setColors(newColors)
   }
-  */
 
   function renderSectionRows (boardRow: number, boardCol: number) {
     const rows = []
@@ -116,11 +125,12 @@ const App: React.FC = () => {
           key={key}
           value={values[boardRow][boardCol][i][j]}
           border={border}
-          color={colors[boardRow][boardCol][i][j]}
           isChangeable={true}
           indices={indices}
           values={values}
           setValues={setValues}
+          colors={colors}
+          setColors={setColors}
         />
         
         blocks.push(block)

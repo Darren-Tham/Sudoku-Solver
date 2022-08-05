@@ -1,43 +1,50 @@
-import React, { useState } from 'react'
-import { NUMS, Border, Indices } from '../App'
+import React, { useRef } from 'react'
+import { NUMS, WHITE, RED, Border, Indices } from '../App'
 
 const LIGHT_BLUE = '#cfedff'
 
 interface Props {
   value: string;
   border: Border;
-  color: string;
   isChangeable: boolean;
   indices: Indices;
   values: string[][][][];
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
+  colors: string[][][][];
+  setColors: React.Dispatch<React.SetStateAction<string[][][][]>>;
 }
 
-const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, color, isChangeable, indices, values, setValues }): JSX.Element => {  
-  const [backgroundColor, setBackgroundColor] = useState(color)
-  
+const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors }): JSX.Element => {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const len = value.length
+  inputRef.current?.setSelectionRange(len, len)
+
+  const { boardRow, boardCol, sectionRow, sectionCol } = indices
+
   function validNumber(numStr: string): boolean {
     const num = Number(numStr)
-    return !isNaN(num) && num > 0 && num <= NUMS
+    return num > 0 && num <= NUMS
   }
   
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const newValue = e.target.value.trim()
-    
+    const newValue = e.target.value
+
+    if (newValue.includes(' ') || newValue.includes('.')) return
+
     if (newValue === '' || validNumber(newValue)) {
       const newValues = values.slice()
-      const { boardRow, boardCol, sectionRow, sectionCol } = indices
       newValues[boardRow][boardCol][sectionRow][sectionCol] = newValue
       setValues(newValues)
     }
   }
 
-  function handleMouseOver() {
-    setBackgroundColor(LIGHT_BLUE)
-  }
-
-  function handleMouseOut() {
-    setBackgroundColor(color)
+  function handleClick() {
+    const newColors: string[][][][] = colors.slice().map(i => i
+      .map(j => j
+      .map(k => k
+      .map(currColor => currColor === RED ? RED : WHITE))))
+    newColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE
+    setColors(newColors)
   }
 
   return (
@@ -45,13 +52,13 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, colo
       type='text'
       value={value}
       onChange={isChangeable ? handleChange : undefined}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
+      onClick={handleClick}
       style={{
         borderTop,
         borderLeft,
-        backgroundColor
+        backgroundColor: colors[boardRow][boardCol][sectionRow][sectionCol]
       }}
+      ref={inputRef}
     />
   )
 }
