@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { NUMS, WHITE, RED, Border, Indices } from '../App'
+import { NUMS, Border, Indices, Colors } from '../App'
 
 const LIGHT_BLUE = '#cfedff'
 
@@ -10,8 +10,8 @@ interface Props {
   indices: Indices;
   values: string[][][][];
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
-  colors: string[][][][];
-  setColors: React.Dispatch<React.SetStateAction<string[][][][]>>;
+  colors: Colors[][][][];
+  setColors: React.Dispatch<React.SetStateAction<Colors[][][][]>>;
 }
 
 const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors }): JSX.Element => {
@@ -20,6 +20,9 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
   inputRef.current?.setSelectionRange(len, len)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
+
+  const { mainColor, selectedColor } = colors[boardRow][boardCol][sectionRow][sectionCol]
+  const backgroundColor = selectedColor === undefined ? mainColor : selectedColor
 
   function validNumber(numStr: string): boolean {
     const num = Number(numStr)
@@ -39,11 +42,23 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
   }
 
   function handleClick() {
-    const newColors: string[][][][] = colors.slice().map(i => i
-      .map(j => j
-      .map(k => k
-      .map(currColor => currColor === RED ? RED : WHITE))))
-    newColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE
+    const newColors: Colors[][][][] = colors.slice()
+      .map((bRow, i) => bRow
+      .map((bCol, j) => bCol
+      .map((sRow, k) => sRow
+      .map(({ mainColor: currMainColor }, l) => {        
+        if (i === boardRow && j === boardCol && k === sectionRow && l === sectionCol) {
+          return {
+            mainColor: currMainColor,
+            selectedColor: LIGHT_BLUE
+          }
+        } else {
+          return {
+            mainColor: currMainColor,
+            selectedColor: undefined
+          }
+        }
+       }))))
     setColors(newColors)
   }
 
@@ -56,7 +71,7 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
       style={{
         borderTop,
         borderLeft,
-        backgroundColor: colors[boardRow][boardCol][sectionRow][sectionCol]
+        backgroundColor
       }}
       ref={inputRef}
     />

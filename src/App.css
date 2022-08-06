@@ -27,7 +27,7 @@ input {
   height: var(--block-size);
   display: inline-block;
   border: none;
-  /* caret-color: transparent; */
+  caret-color: transparent;
   cursor: default;
   text-align: center;
   font-size: 30px;

@@ -32,18 +32,26 @@ interface ColIndices {
   sectionCol: number;
 }
 
-export interface Indices extends RowIndices, ColIndices {}
+export interface Indices extends RowIndices, ColIndices { }
+
+export interface Colors {
+  mainColor: string;
+  selectedColor: string | undefined;
+}
 
 const App: React.FC = () => {
 
   const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
-  const [colors, setColors] = useState<string[][][][]>(create4DArr<string>(WHITE))
+  const [colors, setColors] = useState<Colors[][][][]>(create4DArr<Colors>({
+    mainColor: WHITE,
+    selectedColor: undefined
+  }))
 
   useEffect(() => {
     checkValues()
   }, [values])
 
-  useEffect(() => {
+  useEffect(() => { 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
@@ -89,15 +97,28 @@ const App: React.FC = () => {
   }
 
   function checkValues() {
-    const newColors = create4DArr<string>(WHITE)
+    const newColors = colors.slice()
+      .map(boardRow => boardRow
+      .map(boardCol => boardCol
+      .map(sectionRow => sectionRow
+      .map(({ selectedColor }) => ({
+          mainColor: WHITE,
+          selectedColor
+      })))))
+
     getInvalidRows().forEach(row => {
       const { boardRow, sectionRow } = row
       for (let i = 0; i < SIZE; i++) {
         for (let j = 0; j < SIZE; j++) {
-          newColors[boardRow][i][sectionRow][j] = RED
+          const { selectedColor } = newColors[boardRow][i][sectionRow][j]          
+          newColors[boardRow][i][sectionRow][j] = {
+            mainColor: RED,
+            selectedColor
+          }
         }
       }
     })
+
     setColors(newColors)
   }
 
