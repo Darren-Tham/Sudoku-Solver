@@ -96,6 +96,36 @@ const App: React.FC = () => {
     return invalidRows
   }
 
+  function getInvalidCols() {
+    const invalidCols: ColIndices[] = []
+
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        const uniqueValues: UniqueValues = {}
+        let isValidCol = true
+
+        for (let k = 0; k < SIZE && isValidCol; k++) {
+          for (let l = 0; l < SIZE && isValidCol; l++) {
+            const value = values[k][i][l][j]
+            if (value === '') continue
+
+            if (uniqueValues[value]) {
+              invalidCols.push({
+                boardCol: i,
+                sectionCol: j
+              })
+              isValidCol = false
+            } else {
+              uniqueValues[value] = true
+            }
+          }
+        }
+      }
+    }
+
+    return invalidCols
+  }
+
   function checkValues() {
     const newColors = colors.slice()
       .map(boardRow => boardRow
@@ -118,6 +148,19 @@ const App: React.FC = () => {
         }
       }
     })
+
+    getInvalidCols().forEach(col => {
+      const { boardCol, sectionCol } = col
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          const { selectedColor } = newColors[i][boardCol][j][sectionCol]
+          newColors[i][boardCol][j][sectionCol] = {
+            mainColor: RED,
+            selectedColor
+          }
+        }
+      }
+    }) 
 
     setColors(newColors)
   }
