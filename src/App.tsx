@@ -22,17 +22,12 @@ interface UniqueValues {
   [key: string]: true;
 }
 
-interface RowIndices {
+export interface Indices {
   boardRow: number;
   sectionRow: number;
-}
-
-interface ColIndices {
   boardCol: number;
   sectionCol: number;
 }
-
-export interface Indices extends RowIndices, ColIndices { }
 
 export interface Colors {
   mainColor: string;
@@ -67,6 +62,11 @@ const App: React.FC = () => {
   }
 
   function getInvalidRows() {
+    interface RowIndices {
+      boardRow: number;
+      sectionRow: number;
+    }
+
     const invalidRows: RowIndices[] = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -97,6 +97,11 @@ const App: React.FC = () => {
   }
 
   function getInvalidCols() {
+    interface ColIndices {
+      boardCol: number;      
+      sectionCol: number;
+    }
+
     const invalidCols: ColIndices[] = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -124,6 +129,40 @@ const App: React.FC = () => {
     }
 
     return invalidCols
+  }
+
+  function getInvalidSections() {
+    interface BoardIndices {
+      boardRow: number;
+      boardCol: number;
+    }
+
+    const invalidSections: BoardIndices[] = []
+
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        const uniqueValues: UniqueValues = {}
+        let isValidSection = true
+
+        for (let k = 0; k < SIZE && isValidSection; k++) {
+          for (let l = 0; l < SIZE && isValidSection; l++) {
+            const value = values[i][j][k][l]
+            if (value === '') continue
+
+            if (uniqueValues[value]) {
+              invalidSections.push({
+                boardRow: i,
+                boardCol: j
+              })
+            } else {
+              uniqueValues[value] = true
+            }
+          }
+        } 
+      }
+    }
+
+    return invalidSections
   }
 
   function checkValues() {
@@ -160,7 +199,20 @@ const App: React.FC = () => {
           }
         }
       }
-    }) 
+    })
+
+    getInvalidSections().forEach(section => {
+      const { boardRow, boardCol } = section
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          const { selectedColor } = newColors[boardRow][boardCol][i][j]
+          newColors[boardRow][boardCol][i][j] = {
+            mainColor: RED,
+            selectedColor
+          }
+        }
+      }
+    })
 
     setColors(newColors)
   }
