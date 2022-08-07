@@ -4,6 +4,7 @@ import './App.css'
 
 const SIZE = 3
 export const NUMS = SIZE ** 2
+export const MAX_LEN = NUMS.toString().length
 
 export const WHITE = '#ffffff'
 export const RED = '#ff928a'
@@ -65,8 +66,6 @@ const testBoard = [
   ]
 ]
 
-let count = 0
-
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
 
@@ -96,8 +95,8 @@ export interface Colors {
 
 const App: React.FC = () => {
 
-  // const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
-  const [values, setValues] = useState<string[][][][]>(testBoard)
+  const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
+  // const [values, setValues] = useState<string[][][][]>(testBoard)
   const [colors, setColors] = useState<Colors[][][][]>(create4DArr<Colors>({
     mainColor: WHITE,
     selectedColor: undefined,

@@ -1,5 +1,5 @@
 import React from 'react'
-import { NUMS, LIGHT_BLUE, Border, Indices, Colors, deepCopy4DArr } from '../App'
+import { NUMS, MAX_LEN, LIGHT_BLUE, Border, Indices, Colors, deepCopy4DArr } from '../App'
 
 interface Props {
   value: string;
@@ -14,11 +14,9 @@ interface Props {
 }
 
 const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors, inputRef }): JSX.Element => {
+  inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
+
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
-
-  const len = values[boardRow][boardCol][sectionRow][sectionCol].length
-  inputRef.current?.setSelectionRange(len, len)
-
   const { mainColor, selectedColor, textColor: color } = colors[boardRow][boardCol][sectionRow][sectionCol]
   const backgroundColor = selectedColor === undefined ? mainColor : selectedColor
 
@@ -28,9 +26,13 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
   }
   
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { value } = e.target
+    let { value } = e.target
 
     if (value.includes(' ') || value.includes('.')) return
+
+    if (value.length > MAX_LEN) {
+      value = value.at(-1) as string
+    }
 
     if (value === '' || validNumber(value)) {
       const newValues = deepCopy4DArr(values)
