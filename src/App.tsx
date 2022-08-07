@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, createRef } from 'react'
 import Block from './components/Block'
 import './App.css'
 
@@ -7,6 +7,7 @@ export const NUMS = SIZE ** 2
 
 export const WHITE = '#ffffff'
 export const RED = '#ff928a'
+export const LIGHT_BLUE = '#cfedff'
 
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
@@ -41,15 +42,14 @@ const App: React.FC = () => {
     mainColor: WHITE,
     selectedColor: undefined
   }))
+  const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
-  useEffect(() => {
-    checkValues()
-  }, [values])
+  useEffect(() => checkValues(), [values])
 
   useEffect(() => { 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [colors])
 
   function handleKeyDown(e: KeyboardEvent) {
     const key = e.key.toLowerCase()
@@ -58,6 +58,108 @@ const App: React.FC = () => {
 
     if (disabledArrows.includes(key) || e.ctrlKey && disabledChars.includes(key)) {
       e.preventDefault()
+    }
+
+    switch (key) {
+      case 'arrowup':
+      case 'arrowdown':
+      case 'arrowleft':
+      case 'arrowright':
+        handleMove(key)
+        break
+    }
+  }
+
+  function handleMove(key: string) {
+    let newIndices: Indices | undefined
+
+    const newColors: Colors[][][][] = colors.slice()
+      .map((boardRow, i) => boardRow
+      .map((boardCol, j) => boardCol
+      .map((sectionRow, k) => sectionRow
+      .map(({ mainColor, selectedColor}, l) => {
+        if (selectedColor !== undefined) {
+          newIndices = getNewIndices(i, j, k, l, key)          
+        }
+
+        return {
+          mainColor,
+          selectedColor: undefined
+        }
+      }))))
+    
+    if (newIndices === undefined) {
+      newColors[0][0][0][0] = {
+        mainColor: newColors[0][0][0][0].mainColor,
+        selectedColor: LIGHT_BLUE
+      }
+      inputRefs[0][0][0][0].current?.focus()
+    } else {
+      console.table(newIndices)
+      const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
+      newColors[boardRow][boardCol][sectionRow][sectionCol] = {
+        mainColor: newColors[boardRow][boardCol][sectionRow][sectionCol].mainColor,
+        selectedColor: LIGHT_BLUE
+      }
+      inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
+    }
+
+    setColors(newColors)
+  }
+
+  function handleClick() {
+    console.log(colors)
+  }
+
+  function setInputRefs() {
+    return new Array(SIZE).fill(undefined)
+      .map(() => new Array(SIZE).fill(undefined)
+      .map(() => new Array(SIZE).fill(undefined)
+      .map(() => new Array(SIZE).fill(undefined)
+      .map(() => createRef<HTMLInputElement>()))))
+  }
+
+  function getNewIndices(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, key: string) {
+    switch (key) {
+      case 'arrowup': {
+        let inBounds = sectionRow - 1 >= 0
+        sectionRow = inBounds ? sectionRow - 1 : SIZE - 1
+        if (!inBounds) {
+          boardRow = boardRow - 1 >= 0 ? boardRow - 1 : SIZE - 1
+        }
+        break
+      }
+      case 'arrowdown': {
+        let inBounds = sectionRow + 1 < SIZE
+        sectionRow = inBounds ? sectionRow + 1 : 0
+        if (!inBounds) {
+          boardRow = boardRow + 1 < SIZE ? boardRow + 1 : 0
+        }
+        break
+      }
+      case 'arrowleft': {
+        let inBounds = sectionCol - 1 >= 0
+        sectionCol = inBounds ? sectionCol - 1 : SIZE - 1
+        if (!inBounds) {
+          boardCol = boardCol - 1 >= 0 ? boardCol - 1 : SIZE - 1
+        }
+        break
+      }
+      case 'arrowright': {
+        let inBounds = sectionCol + 1 < SIZE
+        sectionCol = inBounds ? sectionCol + 1 : 0
+        if (!inBounds) {
+          boardCol = boardCol + 1 < SIZE ? boardCol + 1 : 0
+        }
+        break
+      }
+    }
+
+    return {
+      boardRow,
+      boardCol,
+      sectionRow,
+      sectionCol
     }
   }
 
@@ -247,6 +349,7 @@ const App: React.FC = () => {
           setValues={setValues}
           colors={colors}
           setColors={setColors}
+          inputRef ={inputRefs[boardRow][boardCol][i][j]}
         />
         
         blocks.push(block)
@@ -271,7 +374,7 @@ const App: React.FC = () => {
     )
   }
   
-  function renderBoardRows () {
+  function renderBoardRows() {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -317,10 +420,6 @@ const App: React.FC = () => {
     )
   }
 
-  function handleClick() {
-    console.log(values)
-  }
-
   return (
     <div className='container flex-column'>
       {renderBoardRows()}
@@ -333,9 +432,9 @@ const App: React.FC = () => {
 }
 
 function create4DArr<T>(value: T): T[][][][] {
-  return new Array(SIZE).fill(value)
-    .map(() => new Array(SIZE).fill(value)
-    .map(() => new Array(SIZE).fill(value)
+  return new Array(SIZE).fill(undefined)
+    .map(() => new Array(SIZE).fill(undefined)
+    .map(() => new Array(SIZE).fill(undefined)
     .map(() => new Array(SIZE).fill(value))))
 }
 

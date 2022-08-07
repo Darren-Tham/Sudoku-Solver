@@ -1,7 +1,5 @@
-import React, { useRef } from 'react'
-import { NUMS, Border, Indices, Colors } from '../App'
-
-const LIGHT_BLUE = '#cfedff'
+import React from 'react'
+import { NUMS, LIGHT_BLUE, Border, Indices, Colors } from '../App'
 
 interface Props {
   value: string;
@@ -12,12 +10,11 @@ interface Props {
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
   colors: Colors[][][][];
   setColors: React.Dispatch<React.SetStateAction<Colors[][][][]>>;
+  inputRef: React.RefObject<HTMLInputElement>
 }
 
-const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors }): JSX.Element => {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const len = value.length
-  inputRef.current?.setSelectionRange(len, len)
+const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors, inputRef }): JSX.Element => {
+  inputRef.current?.setSelectionRange(value.length, value.length)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
 
@@ -58,7 +55,8 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
             selectedColor: undefined
           }
         }
-       }))))
+      }))))
+       
     setColors(newColors)
   }
 
