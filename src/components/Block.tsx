@@ -1,5 +1,5 @@
 import React from 'react'
-import { NUMS, LIGHT_BLUE, Border, Indices, Colors } from '../App'
+import { NUMS, LIGHT_BLUE, Border, Indices, Colors, deepCopy4DArr } from '../App'
 
 interface Props {
   value: string;
@@ -13,12 +13,13 @@ interface Props {
   inputRef: React.RefObject<HTMLInputElement>
 }
 
-const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors, inputRef }): JSX.Element => {
-  inputRef.current?.setSelectionRange(value.length, value.length)
-
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors, inputRef }): JSX.Element => {
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
 
-  const { mainColor, selectedColor } = colors[boardRow][boardCol][sectionRow][sectionCol]
+  const len = values[boardRow][boardCol][sectionRow][sectionCol].length
+  inputRef.current?.setSelectionRange(len, len)
+
+  const { mainColor, selectedColor, textColor: color } = colors[boardRow][boardCol][sectionRow][sectionCol]
   const backgroundColor = selectedColor === undefined ? mainColor : selectedColor
 
   function validNumber(numStr: string): boolean {
@@ -27,13 +28,13 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
   }
   
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const newValue = e.target.value
+    const { value } = e.target
 
-    if (newValue.includes(' ') || newValue.includes('.')) return
+    if (value.includes(' ') || value.includes('.')) return
 
-    if (newValue === '' || validNumber(newValue)) {
-      const newValues = values.slice()
-      newValues[boardRow][boardCol][sectionRow][sectionCol] = newValue
+    if (value === '' || validNumber(value)) {
+      const newValues = deepCopy4DArr(values)
+      newValues[boardRow][boardCol][sectionRow][sectionCol] = value
       setValues(newValues)
     }
   }
@@ -43,16 +44,18 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
       .map((bRow, i) => bRow
       .map((bCol, j) => bCol
       .map((sRow, k) => sRow
-      .map(({ mainColor: currMainColor }, l) => {        
+      .map(({ mainColor: currMainColor, textColor: currTextColor }, l) => {        
         if (i === boardRow && j === boardCol && k === sectionRow && l === sectionCol) {
           return {
             mainColor: currMainColor,
-            selectedColor: LIGHT_BLUE
+            selectedColor: LIGHT_BLUE,
+            textColor: currTextColor
           }
         } else {
           return {
             mainColor: currMainColor,
-            selectedColor: undefined
+            selectedColor: undefined,
+            textColor: currTextColor
           }
         }
       }))))
@@ -63,13 +66,14 @@ const Block: React.FC<Props> = ({ value, border: { borderTop, borderLeft }, isCh
   return (
     <input
       type='text'
-      value={value}
+      value={values[boardRow][boardCol][sectionRow][sectionCol]}
       onChange={isChangeable ? handleChange : undefined}
       onClick={handleClick}
       style={{
         borderTop,
         borderLeft,
-        backgroundColor
+        backgroundColor,
+        color
       }}
       ref={inputRef}
     />
