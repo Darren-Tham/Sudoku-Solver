@@ -55,22 +55,28 @@ const App: React.FC = () => {
     const key = e.key.toLowerCase()
     const disabledChars = ['a', 'b', 'o', 'p']
     const disabledArrows = ['arrowup', 'arrowleft']
+    let dir: string | undefined
 
     if (disabledArrows.includes(key) || e.ctrlKey && disabledChars.includes(key)) {
       e.preventDefault()
     }
 
-    switch (key) {
-      case 'arrowup':
-      case 'arrowdown':
-      case 'arrowleft':
-      case 'arrowright':
-        handleMove(key)
-        break
+    if (key === 'w' || key === 'arrowup' || e.ctrlKey && key === 'p') {
+      dir = 'up'
+    } else if (key === 's' || key === 'arrowdown' || e.ctrlKey && key === 'n') {
+      dir = 'down'
+    } else if (key === 'a' || key === 'arrowleft' || e.ctrlKey && key === 'b') {
+      dir = 'left'
+    } else if (key === 'd' || key === 'arrowright' || e.ctrlKey && key === 'f') {
+      dir = 'right'
+    }
+
+    if (dir !== undefined) {
+      handleMove(dir)
     }
   }
 
-  function handleMove(key: string) {
+  function handleMove(dir: string) {
     let newIndices: Indices | undefined
 
     const newColors: Colors[][][][] = colors.slice()
@@ -79,7 +85,7 @@ const App: React.FC = () => {
       .map((sectionRow, k) => sectionRow
       .map(({ mainColor, selectedColor}, l) => {
         if (selectedColor !== undefined) {
-          newIndices = getNewIndices(i, j, k, l, key)          
+          newIndices = getNewIndices(i, j, k, l, dir)          
         }
 
         return {
@@ -119,9 +125,9 @@ const App: React.FC = () => {
       .map(() => createRef<HTMLInputElement>()))))
   }
 
-  function getNewIndices(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, key: string) {
-    switch (key) {
-      case 'arrowup': {
+  function getNewIndices(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, dir: string) {
+    switch (dir) {
+      case 'up': {
         let inBounds = sectionRow - 1 >= 0
         sectionRow = inBounds ? sectionRow - 1 : SIZE - 1
         if (!inBounds) {
@@ -129,7 +135,7 @@ const App: React.FC = () => {
         }
         break
       }
-      case 'arrowdown': {
+      case 'down': {
         let inBounds = sectionRow + 1 < SIZE
         sectionRow = inBounds ? sectionRow + 1 : 0
         if (!inBounds) {
@@ -137,7 +143,7 @@ const App: React.FC = () => {
         }
         break
       }
-      case 'arrowleft': {
+      case 'left': {
         let inBounds = sectionCol - 1 >= 0
         sectionCol = inBounds ? sectionCol - 1 : SIZE - 1
         if (!inBounds) {
@@ -145,7 +151,7 @@ const App: React.FC = () => {
         }
         break
       }
-      case 'arrowright': {
+      case 'right': {
         let inBounds = sectionCol + 1 < SIZE
         sectionCol = inBounds ? sectionCol + 1 : 0
         if (!inBounds) {
