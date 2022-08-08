@@ -1,16 +1,11 @@
 import React, { useState, useEffect, createRef } from 'react'
 import Block from './components/Block'
+import { RED, LIGHT_BLUE, BLUE, WHITE, BLACK } from './Colors'
 import './App.css'
 
 const SIZE = 3
-export const NUMS = SIZE ** 2
-export const MAX_LEN = NUMS.toString().length
-
-export const WHITE = '#ffffff'
-export const RED = '#ff928a'
-export const LIGHT_BLUE = '#cfedff'
-const BLUE = '#5cadff'
-const BLACK = '#000000'
+const NUMS = SIZE ** 2
+const MAX_LEN = NUMS.toString().length
 
 const testBoard = [
   [
@@ -69,22 +64,22 @@ const testBoard = [
 const BLACK_BORDER = '3px solid #000000'
 const GRAY_BORDER = '1.5px solid #bfbfbf'
 
-export interface Border {
+interface Border {
   borderTop: string;
   borderLeft: string;
   borderBottom?: string;
   borderRight?: string;
 }
 
-interface UniqueValues {
-  [key: string]: true;
-}
-
-export interface Indices {
+interface Indices {
   boardRow: number;
   sectionRow: number;
   boardCol: number;
   sectionCol: number;
+}
+
+interface UniqueValues {
+  [key: string]: true;
 }
 
 const App: React.FC = () => {
@@ -552,7 +547,7 @@ function create4DArr<T>(value: T): T[][][][] {
     .map(() => new Array(SIZE).fill(value))))
 }
 
-export function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
+function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
   return A
     .map(i => i
     .map(j => j
@@ -560,3 +555,14 @@ export function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
 }
 
 export default App
+
+export {
+  NUMS,
+  MAX_LEN,
+  deepCopy4DArr
+}
+
+export type {
+  Border,
+  Indices
+}

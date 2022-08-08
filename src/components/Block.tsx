@@ -1,5 +1,6 @@
 import React from 'react'
-import { NUMS, MAX_LEN, LIGHT_BLUE, Border, Indices, deepCopy4DArr } from '../App'
+import { NUMS, MAX_LEN, Border, Indices, deepCopy4DArr } from '../App'
+import { LIGHT_BLUE } from '../Colors'
 
 interface Props {
   value: string;
