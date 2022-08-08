@@ -87,21 +87,13 @@ export interface Indices {
   sectionCol: number;
 }
 
-export interface Colors {
-  mainColor: string;
-  selectedColor: string | undefined;
-  textColor: string
-}
-
 const App: React.FC = () => {
 
-  const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
-  // const [values, setValues] = useState<string[][][][]>(testBoard)
-  const [colors, setColors] = useState<Colors[][][][]>(create4DArr<Colors>({
-    mainColor: WHITE,
-    selectedColor: undefined,
-    textColor: BLACK
-  }))
+  // const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
+  const [values, setValues] = useState<string[][][][]>(testBoard)
+  const [colors, setColors] = useState<string[][][][]>(create4DArr(WHITE))
+  const [selectedColors, setSelectedColors] = useState<(string | undefined)[][][][]>(create4DArr(undefined))
+  const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
   useEffect(() => checkValues(), [values])
@@ -109,7 +101,7 @@ const App: React.FC = () => {
   useEffect(() => { 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [colors])
+  }, [selectedColors])
 
   function handleKeyDown(e: KeyboardEvent) {
     const key = e.key.toLowerCase()
@@ -139,48 +131,33 @@ const App: React.FC = () => {
   function handleMove(dir: string) {
     let newIndices: Indices | undefined
 
-    const newColors: Colors[][][][] = colors.slice()
+    const newSelectedColors: (string | undefined)[][][][] = selectedColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map(({ mainColor, selectedColor, textColor }, l) => {
+      .map((selectedColor, l) => {
         if (selectedColor !== undefined) {
-          newIndices = getNewIndices(i, j, k, l, dir)          
+          newIndices = getNewIndices(i, j, k, l, dir)
         }
-
-        return {
-          mainColor,
-          selectedColor: undefined,
-          textColor
-        }
+        return undefined
       }))))
-    
+
     if (newIndices === undefined) {
-      const { mainColor, textColor } = newColors[0][0][0][0]
-      newColors[0][0][0][0] = {
-        mainColor,
-        selectedColor: LIGHT_BLUE,
-        textColor
-      }
+      newSelectedColors[0][0][0][0] = LIGHT_BLUE
       inputRefs[0][0][0][0].current?.focus()
     } else {
       const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
-      const { mainColor, textColor } = newColors[boardRow][boardCol][sectionRow][sectionCol]
-      newColors[boardRow][boardCol][sectionRow][sectionCol] = {
-        mainColor,
-        selectedColor: LIGHT_BLUE,
-        textColor
-      }
+      newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE
       inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
     }
 
-    setColors(newColors)
+    setSelectedColors(newSelectedColors)
   }
 
   function handleClick() {
     const board = deepCopy4DArr(values)
     if (solveSudoku(board)) {
-      updateColors(board)
+      updateTextColors(board)
       setValues(board)
     } else {
       alert('Suck')
@@ -344,26 +321,13 @@ const App: React.FC = () => {
   }
 
   function checkValues() {
-    const newColors = colors.slice()
-      .map(boardRow => boardRow
-      .map(boardCol => boardCol
-      .map(sectionRow => sectionRow
-      .map(({ selectedColor, textColor }) => ({
-          mainColor: WHITE,
-          selectedColor,
-          textColor
-      })))))
+    const newColors = create4DArr(WHITE)
 
     getInvalidRows().forEach(row => {
       const { boardRow, sectionRow } = row
       for (let i = 0; i < SIZE; i++) {
         for (let j = 0; j < SIZE; j++) {
-          const { selectedColor, textColor } = newColors[boardRow][i][sectionRow][j]          
-          newColors[boardRow][i][sectionRow][j] = {
-            mainColor: RED,
-            selectedColor,
-            textColor
-          }
+          newColors[boardRow][i][sectionRow][j] = RED
         }
       }
     })
@@ -372,12 +336,7 @@ const App: React.FC = () => {
       const { boardCol, sectionCol } = col
       for (let i = 0; i < SIZE; i++) {
         for (let j = 0; j < SIZE; j++) {
-          const { selectedColor, textColor } = newColors[i][boardCol][j][sectionCol]
-          newColors[i][boardCol][j][sectionCol] = {
-            mainColor: RED,
-            selectedColor,
-            textColor
-          }
+          newColors[i][boardCol][j][sectionCol] = RED
         }
       }
     })
@@ -386,12 +345,7 @@ const App: React.FC = () => {
       const { boardRow, boardCol } = section
       for (let i = 0; i < SIZE; i++) {
         for (let j = 0; j < SIZE; j++) {
-          const { selectedColor, textColor } = newColors[boardRow][boardCol][i][j]
-          newColors[boardRow][boardCol][i][j] = {
-            mainColor: RED,
-            selectedColor,
-            textColor
-          }
+          newColors[boardRow][boardCol][i][j] = RED
         }
       }
     })
@@ -464,26 +418,17 @@ const App: React.FC = () => {
     return false
   }
 
-  function updateColors(board: string[][][][]) {
-    const newColors: Colors[][][][] = colors.slice()
+  function updateTextColors(board: string[][][][]) {
+    setTextColors(textColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map(({ mainColor,  selectedColor }, l) => {
-        if (values[i][j][k][l] !== board[i][j][k][l]) {
-          return {
-            mainColor,
-            selectedColor,
-            textColor: BLUE
-          }
+      .map((_, l) => {
+        if (values[i][j][k][l] === board[i][j][k][l]) {
+          return BLACK
         }
-        return {
-          mainColor,
-          selectedColor,
-          textColor: BLACK
-        }
-      }))))
-    setColors(newColors)
+        return BLUE
+    })))))
   }
 
   function renderSectionRows (boardRow: number, boardCol: number) {
@@ -514,9 +459,11 @@ const App: React.FC = () => {
           indices={indices}
           values={values}
           setValues={setValues}
-          colors={colors}
-          setColors={setColors}
           inputRef ={inputRefs[boardRow][boardCol][i][j]}
+          color={colors[boardRow][boardCol][i][j]}
+          textColor={textColors[boardRow][boardCol][i][j]}
+          selectedColors={selectedColors}
+          setSelectedColors={setSelectedColors}
         />
         
         blocks.push(block)

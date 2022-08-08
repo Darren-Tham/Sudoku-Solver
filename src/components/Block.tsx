@@ -1,5 +1,5 @@
 import React from 'react'
-import { NUMS, MAX_LEN, LIGHT_BLUE, Border, Indices, Colors, deepCopy4DArr } from '../App'
+import { NUMS, MAX_LEN, LIGHT_BLUE, Border, Indices, deepCopy4DArr } from '../App'
 
 interface Props {
   value: string;
@@ -8,17 +8,26 @@ interface Props {
   indices: Indices;
   values: string[][][][];
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
-  colors: Colors[][][][];
-  setColors: React.Dispatch<React.SetStateAction<Colors[][][][]>>;
   inputRef: React.RefObject<HTMLInputElement>
+  color: string;
+  textColor: string;
+  selectedColors: (string | undefined)[][][][];
+  setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, colors, setColors, inputRef }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
-  const { mainColor, selectedColor, textColor: color } = colors[boardRow][boardCol][sectionRow][sectionCol]
-  const backgroundColor = selectedColor === undefined ? mainColor : selectedColor
+
+  function getEleFromArr<T>(A: T[][][][]): T {
+    return A[boardRow][boardCol][sectionRow][sectionCol]
+  }
+
+  function setBackgroundColor() {
+    const selectedColor = getEleFromArr(selectedColors)
+    return selectedColor === undefined ? color : selectedColor
+  }
 
   function validNumber(numStr: string): boolean {
     const num = Number(numStr)
@@ -42,27 +51,16 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
   }
 
   function handleClick() {
-    const newColors: Colors[][][][] = colors.slice()
+    setSelectedColors(selectedColors
       .map((bRow, i) => bRow
       .map((bCol, j) => bCol
       .map((sRow, k) => sRow
-      .map(({ mainColor: currMainColor, textColor: currTextColor }, l) => {        
+      .map((_, l) => {
         if (i === boardRow && j === boardCol && k === sectionRow && l === sectionCol) {
-          return {
-            mainColor: currMainColor,
-            selectedColor: LIGHT_BLUE,
-            textColor: currTextColor
-          }
-        } else {
-          return {
-            mainColor: currMainColor,
-            selectedColor: undefined,
-            textColor: currTextColor
-          }
+          return LIGHT_BLUE
         }
-      }))))
-       
-    setColors(newColors)
+        return undefined
+      })))))
   }
 
   return (
@@ -74,8 +72,8 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
       style={{
         borderTop,
         borderLeft,
-        backgroundColor,
-        color
+        backgroundColor: setBackgroundColor(),
+        color: textColor
       }}
       ref={inputRef}
     />
