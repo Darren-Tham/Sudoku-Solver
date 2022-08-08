@@ -15,10 +15,10 @@ interface Props {
   selectedColors: (string | undefined)[][][][];
   setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
   setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
-  highlight: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
+  highlightValues: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastIndices, highlight }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastIndices, highlightValues }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -63,7 +63,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
     const newSelectedColors: (string | undefined)[][][][] = create4DArr(undefined)
     newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
     setSelectedColors(newSelectedColors)
-    highlight(boardRow, boardCol, sectionRow, sectionCol)
+    highlightValues(boardRow, boardCol, sectionRow, sectionCol)
   }
 
   return (

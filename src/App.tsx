@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createRef } from 'react'
 import Block from './components/Block'
-import { RED, BLUE, LIGHT_BLUE, TEXT_BLUE, WHITE, BLACK } from './Colors'
+import { RED, BLUE, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, BLACK } from './Colors'
 import './App.css'
 
 const SIZE = 3
@@ -92,7 +92,11 @@ const App: React.FC = () => {
   const [lastIndices, setLastIndices] = useState<Indices | undefined>(undefined)
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
-  useEffect(() => checkValues(), [values])
+  useEffect(() => {
+    if (lastIndices === undefined) return
+    const { boardRow, boardCol, sectionRow, sectionCol } = lastIndices
+    highlightValues(boardRow, boardCol, sectionRow, sectionCol)
+  }, [values])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -141,12 +145,12 @@ const App: React.FC = () => {
     if (newIndices === undefined) {
       newSelectedColors[0][0][0][0] = BLUE
       inputRefs[0][0][0][0].current?.focus()
-      highlight(0, 0, 0, 0)
+      highlightValues(0, 0, 0, 0)
     } else {
       const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
       newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
       inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
-      highlight(boardRow, boardCol, sectionRow, sectionCol)
+      highlightValues(boardRow, boardCol, sectionRow, sectionCol)
     }
 
     setSelectedColors(newSelectedColors)
@@ -339,10 +343,7 @@ const App: React.FC = () => {
     })
   }
 
-  function checkValues() {
-    if (lastIndices === undefined) return
-    const { boardRow, boardCol, sectionRow, sectionCol } = lastIndices
-
+  function highlightValues(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) {
     const newColors = create4DArr(WHITE)
 
     for (let i = 0; i < SIZE; i++) {
@@ -356,31 +357,18 @@ const App: React.FC = () => {
     checkRows(newColors)
     checkCols(newColors)
     checkSections(newColors)
-    setColors(newColors)
-  }
 
-  function highlight(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) {
-    const newColors = colors
-      .map(bRow => bRow
-      .map(bCol => bCol
-      .map(sRow => sRow
-      .map(color => color === LIGHT_BLUE ? WHITE : color))))
-      
-    for (let i = 0; i < SIZE; i++) {
-      for (let j = 0; j < SIZE; j++) {
-        if (newColors[boardRow][i][sectionRow][j] !== RED) {
-          newColors[boardRow][i][sectionRow][j] = LIGHT_BLUE
+    setColors(newColors
+      .map((bRow, i) => bRow
+      .map((bCol, j) => bCol
+      .map((sRow, k) => sRow
+      .map((color, l) => {
+        const currValue = values[i][j][k][l]
+        if (currValue !== '' && currValue === values[boardRow][boardCol][sectionRow][sectionCol]) {
+          return PURPLE
         }
-        if (newColors[i][boardCol][j][sectionCol] !== RED) {
-          newColors[i][boardCol][j][sectionCol] = LIGHT_BLUE
-        }
-        if (newColors[boardRow][boardCol][i][j] !== RED) {
-          newColors[boardRow][boardCol][i][j] = LIGHT_BLUE
-        }
-      }
-    }
-
-    setColors(newColors)
+        return color
+      })))))
   }
 
   function isSafe(board: string[][][][], value: string, boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) {
@@ -453,12 +441,7 @@ const App: React.FC = () => {
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map((_, l) => {
-        if (values[i][j][k][l] === board[i][j][k][l]) {
-          return BLACK
-        }
-        return TEXT_BLUE
-    })))))
+      .map((_, l) => values[i][j][k][l] === board[i][j][k][l] ? BLACK : TEXT_BLUE)))))
   }
 
   function renderSectionRows (boardRow: number, boardCol: number) {
@@ -495,7 +478,7 @@ const App: React.FC = () => {
           selectedColors={selectedColors}
           setSelectedColors={setSelectedColors}
           setLastIndices={setLastIndices}
-          highlight={highlight}
+          highlightValues={highlightValues}
         />
         
         blocks.push(block)

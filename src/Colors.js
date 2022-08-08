@@ -1,7 +1,8 @@
 const RED = '#ff928a'
-const BLUE = '#cfedff'
+const BLUE = '#c2e8ff'
 const LIGHT_BLUE = '#e8f2fc'
 const TEXT_BLUE = '#5cadff'
+const PURPLE = '#d9ccff'
 const WHITE = '#ffffff'
 const BLACK = '#000000'
 
@@ -10,6 +11,7 @@ export {
   BLUE,
   LIGHT_BLUE,
   TEXT_BLUE,
+  PURPLE,
   WHITE,
   BLACK
 }
