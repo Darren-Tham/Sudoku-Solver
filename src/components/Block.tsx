@@ -1,5 +1,5 @@
 import React from 'react'
-import { NUMS, MAX_LEN, Border, Indices, LastValue, create4DArr, deepCopy4DArr } from '../App'
+import { NUMS, MAX_LEN, Border, Indices, create4DArr, deepCopy4DArr } from '../App'
 import { BLUE } from '../Colors'
 
 interface Props {
@@ -14,11 +14,11 @@ interface Props {
   textColor: string;
   selectedColors: (string | undefined)[][][][];
   setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
-  setLastValue: React.Dispatch<React.SetStateAction<LastValue | undefined>>;
+  setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
   highlight: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastValue, highlight }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastIndices, highlight }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -50,8 +50,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
       const newValues = deepCopy4DArr(values)
       newValues[boardRow][boardCol][sectionRow][sectionCol] = value
       setValues(newValues)
-      setLastValue({
-        value,
+      setLastIndices({
         boardRow,
         boardCol,
         sectionRow,
