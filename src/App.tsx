@@ -78,6 +78,10 @@ interface Indices {
   sectionCol: number;
 }
 
+interface LastValue extends Indices {
+  value: string
+}
+
 interface UniqueValues {
   [key: string]: true;
 }
@@ -89,6 +93,7 @@ const App: React.FC = () => {
   const [colors, setColors] = useState<string[][][][]>(create4DArr(WHITE))
   const [selectedColors, setSelectedColors] = useState<(string | undefined)[][][][]>(create4DArr(undefined))
   const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
+  const [lastValue, setLastValue] = useState<LastValue | undefined>(undefined)
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
   useEffect(() => checkValues(), [values])
@@ -211,140 +216,85 @@ const App: React.FC = () => {
     }
   }
 
-  function getInvalidRows() {
-    interface RowIndices {
-      boardRow: number;
-      sectionRow: number;
-    }
+  function checkRow(newColors: string[][][][]) {
+    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
+    let isValid = true
 
-    const invalidRows: RowIndices[] = []
+    for (let i = 0; i < SIZE && isValid; i++) {
+      for (let j = 0; j < SIZE && isValid; j++) {
+        const currValue = values[boardRow][i][sectionRow][j]
+        if ((i === boardCol && j === sectionCol) || currValue === '') continue
+
+        if (currValue === value) {
+          isValid = false
+        }
+      }
+    }
+    
+    if (isValid) return
 
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
-        const uniqueValues: UniqueValues = {}
-        let isValidRow = true
+        newColors[boardRow][i][sectionRow][j] = RED
+      }
+    }
+  }
 
-        for (let k = 0; k < SIZE && isValidRow; k++) {
-          for (let l = 0; l < SIZE && isValidRow; l++) {
-            const value = values[i][k][j][l]
-            if (value === '') continue
+  function checkCol(newColors: string[][][][]) {
+    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
+    let isValid = true
 
-            if (uniqueValues[value]) {
-              invalidRows.push({
-                boardRow: i,
-                sectionRow: j
-              })
-              isValidRow = false
-            } else {
-              uniqueValues[value] = true
-            }
-          }
+    for (let i = 0; i < SIZE && isValid; i++) {
+      for (let j = 0; j < SIZE && isValid; j++) {
+        const currValue = values[i][boardCol][j][sectionCol]
+        if ((i === boardRow && j === sectionRow) || currValue === '') continue
+
+        if (currValue === value) {
+          isValid = false
         }
       }
     }
 
-    return invalidRows
-  }
-
-  function getInvalidCols() {
-    interface ColIndices {
-      boardCol: number;      
-      sectionCol: number;
-    }
-
-    const invalidCols: ColIndices[] = []
+    if (isValid) return
 
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
-        const uniqueValues: UniqueValues = {}
-        let isValidCol = true
+        newColors[i][boardCol][j][sectionCol] = RED
+      }
+    }    
+  }
 
-        for (let k = 0; k < SIZE && isValidCol; k++) {
-          for (let l = 0; l < SIZE && isValidCol; l++) {
-            const value = values[k][i][l][j]
-            if (value === '') continue
+  function checkSection(newColors: string[][][][]) {
+    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
+    let isValid = true
 
-            if (uniqueValues[value]) {
-              invalidCols.push({
-                boardCol: i,
-                sectionCol: j
-              })
-              isValidCol = false
-            } else {
-              uniqueValues[value] = true
-            }
-          }
+    for (let i = 0; i < SIZE && isValid; i++) {
+      for (let j = 0; j < SIZE && isValid; j++) {
+        const currValue = values[boardRow][boardCol][i][j]
+        if ((i === sectionRow && j === sectionCol) || currValue === '') continue
+
+        if (currValue === value) {
+          isValid = false
         }
       }
     }
 
-    return invalidCols
-  }
-
-  function getInvalidSections() {
-    interface BoardIndices {
-      boardRow: number;
-      boardCol: number;
-    }
-
-    const invalidSections: BoardIndices[] = []
+    if (isValid) return
 
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
-        const uniqueValues: UniqueValues = {}
-        let isValidSection = true
-
-        for (let k = 0; k < SIZE && isValidSection; k++) {
-          for (let l = 0; l < SIZE && isValidSection; l++) {
-            const value = values[i][j][k][l]
-            if (value === '') continue
-
-            if (uniqueValues[value]) {
-              invalidSections.push({
-                boardRow: i,
-                boardCol: j
-              })
-            } else {
-              uniqueValues[value] = true
-            }
-          }
-        } 
+        newColors[boardRow][boardCol][i][j] = RED
       }
     }
-
-    return invalidSections
   }
 
   function checkValues() {
+    if (lastValue === undefined) return
+
     const newColors = create4DArr(WHITE)
-
-    getInvalidRows().forEach(row => {
-      const { boardRow, sectionRow } = row
-      for (let i = 0; i < SIZE; i++) {
-        for (let j = 0; j < SIZE; j++) {
-          newColors[boardRow][i][sectionRow][j] = RED
-        }
-      }
-    })
-
-    getInvalidCols().forEach(col => {
-      const { boardCol, sectionCol } = col
-      for (let i = 0; i < SIZE; i++) {
-        for (let j = 0; j < SIZE; j++) {
-          newColors[i][boardCol][j][sectionCol] = RED
-        }
-      }
-    })
-
-    getInvalidSections().forEach(section => {
-      const { boardRow, boardCol } = section
-      for (let i = 0; i < SIZE; i++) {
-        for (let j = 0; j < SIZE; j++) {
-          newColors[boardRow][boardCol][i][j] = RED
-        }
-      }
-    })
-
+    checkRow(newColors)
+    checkCol(newColors)
+    checkSection(newColors)
     setColors(newColors)
   }
 
@@ -455,10 +405,12 @@ const App: React.FC = () => {
           values={values}
           setValues={setValues}
           inputRef ={inputRefs[boardRow][boardCol][i][j]}
-          color={colors[boardRow][boardCol][i][j]}
           textColor={textColors[boardRow][boardCol][i][j]}
+          colors={colors}
+          setColors={setColors}
           selectedColors={selectedColors}
           setSelectedColors={setSelectedColors}
+          setLastValue={setLastValue}
         />
         
         blocks.push(block)
@@ -559,10 +511,12 @@ export default App
 export {
   NUMS,
   MAX_LEN,
+  create4DArr,
   deepCopy4DArr
 }
 
 export type {
   Border,
-  Indices
+  Indices,
+  LastValue
 }

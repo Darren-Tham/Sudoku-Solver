@@ -1,5 +1,5 @@
 import React from 'react'
-import { NUMS, MAX_LEN, Border, Indices, deepCopy4DArr } from '../App'
+import { NUMS, MAX_LEN, Border, Indices, LastValue, create4DArr, deepCopy4DArr } from '../App'
 import { LIGHT_BLUE } from '../Colors'
 
 interface Props {
@@ -10,13 +10,15 @@ interface Props {
   values: string[][][][];
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
   inputRef: React.RefObject<HTMLInputElement>
-  color: string;
   textColor: string;
+  colors: string[][][][];
+  setColors: React.Dispatch<React.SetStateAction<(string[][][][])>>;
   selectedColors: (string | undefined)[][][][];
   setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
+  setLastValue: React.Dispatch<React.SetStateAction<LastValue | undefined>>;
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, textColor, colors, setColors, selectedColors, setSelectedColors, setLastValue }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -27,6 +29,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
   function setBackgroundColor() {
     const selectedColor = getEleFromArr(selectedColors)
+    const color = getEleFromArr(colors)
     return selectedColor === undefined ? color : selectedColor
   }
 
@@ -48,20 +51,21 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
       const newValues = deepCopy4DArr(values)
       newValues[boardRow][boardCol][sectionRow][sectionCol] = value
       setValues(newValues)
+      setLastValue({
+        value,
+        boardRow,
+        boardCol,
+        sectionRow,
+        sectionCol
+      })
     }
   }
 
   function handleClick() {
-    setSelectedColors(selectedColors
-      .map((bRow, i) => bRow
-      .map((bCol, j) => bCol
-      .map((sRow, k) => sRow
-      .map((_, l) => {
-        if (i === boardRow && j === boardCol && k === sectionRow && l === sectionCol) {
-          return LIGHT_BLUE
-        }
-        return undefined
-      })))))
+    const newSelectedColors: (string | undefined)[][][][] = create4DArr(undefined)
+    newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE    
+    setSelectedColors(newSelectedColors)
+    
   }
 
   return (
