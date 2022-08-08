@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createRef } from 'react'
 import Block from './components/Block'
-import { RED, LIGHT_BLUE, BLUE, WHITE, BLACK } from './Colors'
+import { RED, BLUE, LIGHT_BLUE, TEXT_BLUE, WHITE, BLACK } from './Colors'
 import './App.css'
 
 const SIZE = 3
@@ -98,10 +98,10 @@ const App: React.FC = () => {
 
   useEffect(() => checkValues(), [values])
 
-  useEffect(() => { 
+  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedColors])
+  }, [colors, selectedColors])
 
   function handleKeyDown(e: KeyboardEvent) {
     const key = e.key.toLowerCase()
@@ -133,21 +133,23 @@ const App: React.FC = () => {
 
     const newSelectedColors: (string | undefined)[][][][] = selectedColors
       .map((boardRow, i) => boardRow
-      .map((boardCol, j) => boardCol
-      .map((sectionRow, k) => sectionRow
-      .map((selectedColor, l) => {
-        if (selectedColor !== undefined) {
-          newIndices = getNewIndices(i, j, k, l, dir)
-        }
-        return undefined
-      }))))
+        .map((boardCol, j) => boardCol
+          .map((sectionRow, k) => sectionRow
+            .map((selectedColor, l) => {
+              if (selectedColor !== undefined) {
+                newIndices = getNewIndices(i, j, k, l, dir)
+              }
+              return undefined
+            }))))
 
     if (newIndices === undefined) {
-      newSelectedColors[0][0][0][0] = LIGHT_BLUE
+      highlight(0, 0, 0, 0)
+      newSelectedColors[0][0][0][0] = BLUE
       inputRefs[0][0][0][0].current?.focus()
     } else {
       const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
-      newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE
+      highlight(boardRow, boardCol, sectionRow, sectionCol)
+      newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
       inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
     }
 
@@ -167,9 +169,9 @@ const App: React.FC = () => {
   function setInputRefs() {
     return new Array(SIZE).fill(undefined)
       .map(() => new Array(SIZE).fill(undefined)
-      .map(() => new Array(SIZE).fill(undefined)
-      .map(() => new Array(SIZE).fill(undefined)
-      .map(() => createRef<HTMLInputElement>()))))
+        .map(() => new Array(SIZE).fill(undefined)
+          .map(() => new Array(SIZE).fill(undefined)
+            .map(() => createRef<HTMLInputElement>()))))
   }
 
   function getNewIndices(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, dir: string) {
@@ -216,85 +218,164 @@ const App: React.FC = () => {
     }
   }
 
-  function checkRow(newColors: string[][][][]) {
-    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
-    let isValid = true
-
-    for (let i = 0; i < SIZE && isValid; i++) {
-      for (let j = 0; j < SIZE && isValid; j++) {
-        const currValue = values[boardRow][i][sectionRow][j]
-        if ((i === boardCol && j === sectionCol) || currValue === '') continue
-
-        if (currValue === value) {
-          isValid = false
+  function highlight(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) {
+    const newColors = colors
+      .map(bRow => bRow
+        .map(bCol => bCol
+          .map(sRow => sRow
+            .map(color => color === LIGHT_BLUE ? WHITE : color))))
+      
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        if (newColors[boardRow][i][sectionRow][j] !== RED) {
+          newColors[boardRow][i][sectionRow][j] = LIGHT_BLUE
+        }
+        if (newColors[i][boardCol][j][sectionCol] !== RED) {
+          newColors[i][boardCol][j][sectionCol] = LIGHT_BLUE
+        }
+        if (newColors[boardRow][boardCol][i][j] !== RED) {
+          newColors[boardRow][boardCol][i][j] = LIGHT_BLUE
         }
       }
     }
-    
-    if (isValid) return
 
-    for (let i = 0; i < SIZE; i++) {
-      for (let j = 0; j < SIZE; j++) {
-        newColors[boardRow][i][sectionRow][j] = RED
-      }
-    }
+    setColors(newColors)
   }
 
-  function checkCol(newColors: string[][][][]) {
-    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
-    let isValid = true
+  function getInvalidRows() {
+    interface RowIndices {
+      boardRow: number;
+      sectionRow: number;
+    }
 
-    for (let i = 0; i < SIZE && isValid; i++) {
-      for (let j = 0; j < SIZE && isValid; j++) {
-        const currValue = values[i][boardCol][j][sectionCol]
-        if ((i === boardRow && j === sectionRow) || currValue === '') continue
+    const invalidRows: RowIndices[] = []
 
-        if (currValue === value) {
-          isValid = false
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        const uniqueValues: UniqueValues = {}
+        let isValidRow = true
+
+        for (let k = 0; k < SIZE && isValidRow; k++) {
+          for (let l = 0; l < SIZE && isValidRow; l++) {
+            const value = values[i][k][j][l]
+            if (value === '') continue
+
+            if (uniqueValues[value]) {
+              invalidRows.push({
+                boardRow: i,
+                sectionRow: j
+              })
+              isValidRow = false
+            } else {
+              uniqueValues[value] = true
+            }
+          }
         }
       }
     }
 
-    if (isValid) return
-
-    for (let i = 0; i < SIZE; i++) {
-      for (let j = 0; j < SIZE; j++) {
-        newColors[i][boardCol][j][sectionCol] = RED
-      }
-    }    
+    return invalidRows
   }
 
-  function checkSection(newColors: string[][][][]) {
-    const { value, boardRow, boardCol, sectionRow, sectionCol } = lastValue as LastValue
-    let isValid = true
+  function getInvalidCols() {
+    interface ColIndices {
+      boardCol: number;      
+      sectionCol: number;
+    }
 
-    for (let i = 0; i < SIZE && isValid; i++) {
-      for (let j = 0; j < SIZE && isValid; j++) {
-        const currValue = values[boardRow][boardCol][i][j]
-        if ((i === sectionRow && j === sectionCol) || currValue === '') continue
+    const invalidCols: ColIndices[] = []
 
-        if (currValue === value) {
-          isValid = false
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        const uniqueValues: UniqueValues = {}
+        let isValidCol = true
+
+        for (let k = 0; k < SIZE && isValidCol; k++) {
+          for (let l = 0; l < SIZE && isValidCol; l++) {
+            const value = values[k][i][l][j]
+            if (value === '') continue
+
+            if (uniqueValues[value]) {
+              invalidCols.push({
+                boardCol: i,
+                sectionCol: j
+              })
+              isValidCol = false
+            } else {
+              uniqueValues[value] = true
+            }
+          }
         }
       }
     }
 
-    if (isValid) return
+    return invalidCols
+  }
+
+  function getInvalidSections() {
+    interface BoardIndices {
+      boardRow: number;
+      boardCol: number;
+    }
+
+    const invalidSections: BoardIndices[] = []
 
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
-        newColors[boardRow][boardCol][i][j] = RED
+        const uniqueValues: UniqueValues = {}
+        let isValidSection = true
+
+        for (let k = 0; k < SIZE && isValidSection; k++) {
+          for (let l = 0; l < SIZE && isValidSection; l++) {
+            const value = values[i][j][k][l]
+            if (value === '') continue
+
+            if (uniqueValues[value]) {
+              invalidSections.push({
+                boardRow: i,
+                boardCol: j
+              })
+            } else {
+              uniqueValues[value] = true
+            }
+          }
+        } 
       }
     }
+
+    return invalidSections
   }
 
   function checkValues() {
-    if (lastValue === undefined) return
-
     const newColors = create4DArr(WHITE)
-    checkRow(newColors)
-    checkCol(newColors)
-    checkSection(newColors)
+
+    getInvalidRows().forEach(row => {
+      const { boardRow, sectionRow } = row
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          newColors[boardRow][i][sectionRow][j] = RED
+        }
+      }
+    })
+
+    getInvalidCols().forEach(col => {
+      const { boardCol, sectionCol } = col
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          newColors[i][boardCol][j][sectionCol] = RED
+        }
+      }
+    })
+
+    getInvalidSections().forEach(section => {
+      const { boardRow, boardCol } = section
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          newColors[boardRow][boardCol][i][j] = RED
+        }
+      }
+    })
+
     setColors(newColors)
   }
 
@@ -372,7 +453,7 @@ const App: React.FC = () => {
         if (values[i][j][k][l] === board[i][j][k][l]) {
           return BLACK
         }
-        return BLUE
+        return TEXT_BLUE
     })))))
   }
 
@@ -405,12 +486,12 @@ const App: React.FC = () => {
           values={values}
           setValues={setValues}
           inputRef ={inputRefs[boardRow][boardCol][i][j]}
+          color={colors[boardRow][boardCol][i][j]}
           textColor={textColors[boardRow][boardCol][i][j]}
-          colors={colors}
-          setColors={setColors}
           selectedColors={selectedColors}
           setSelectedColors={setSelectedColors}
           setLastValue={setLastValue}
+          highlight={highlight}
         />
         
         blocks.push(block)

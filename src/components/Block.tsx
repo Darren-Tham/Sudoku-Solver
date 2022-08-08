@@ -1,6 +1,6 @@
 import React from 'react'
 import { NUMS, MAX_LEN, Border, Indices, LastValue, create4DArr, deepCopy4DArr } from '../App'
-import { LIGHT_BLUE } from '../Colors'
+import { BLUE } from '../Colors'
 
 interface Props {
   value: string;
@@ -10,15 +10,15 @@ interface Props {
   values: string[][][][];
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
   inputRef: React.RefObject<HTMLInputElement>
+  color: string
   textColor: string;
-  colors: string[][][][];
-  setColors: React.Dispatch<React.SetStateAction<(string[][][][])>>;
   selectedColors: (string | undefined)[][][][];
   setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
   setLastValue: React.Dispatch<React.SetStateAction<LastValue | undefined>>;
+  highlight: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, textColor, colors, setColors, selectedColors, setSelectedColors, setLastValue }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastValue, highlight }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -29,7 +29,6 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
   function setBackgroundColor() {
     const selectedColor = getEleFromArr(selectedColors)
-    const color = getEleFromArr(colors)
     return selectedColor === undefined ? color : selectedColor
   }
 
@@ -63,9 +62,9 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
   function handleClick() {
     const newSelectedColors: (string | undefined)[][][][] = create4DArr(undefined)
-    newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = LIGHT_BLUE    
+    newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
     setSelectedColors(newSelectedColors)
-    
+    highlight(boardRow, boardCol, sectionRow, sectionCol)
   }
 
   return (
