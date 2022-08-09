@@ -1,4 +1,3 @@
-import React from 'react'
 import { NUMS, MAX_LEN, Border, Indices, create4DArr, deepCopy4DArr } from '../App'
 import { BLUE } from '../Colors'
 

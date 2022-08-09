@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createRef } from 'react'
+import { useState, useEffect, createRef } from 'react'
 import Block from './components/Block'
 import { RED, BLUE, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, BLACK } from './Colors'
 import './App.css'
@@ -6,6 +6,7 @@ import './App.css'
 const SIZE = 3
 const NUMS = SIZE ** 2
 const MAX_LEN = NUMS.toString().length
+const TIME = 10
 
 const testBoard = [
   [
@@ -109,17 +110,17 @@ const App: React.FC = () => {
     const disabledArrows = ['arrowup', 'arrowleft']
     let dir: string | undefined
 
-    if (disabledArrows.includes(key) || e.ctrlKey && disabledChars.includes(key)) {
+    if (disabledArrows.includes(key) || (e.ctrlKey && disabledChars.includes(key))) {
       e.preventDefault()
     }
 
-    if (key === 'w' || key === 'arrowup' || e.ctrlKey && key === 'p') {
+    if (key === 'w' || key === 'arrowup' ||( e.ctrlKey && key === 'p')) {
       dir = 'up'
-    } else if (key === 's' || key === 'arrowdown' || e.ctrlKey && key === 'n') {
+    } else if (key === 's' || key === 'arrowdown' || (e.ctrlKey && key === 'n')) {
       dir = 'down'
-    } else if (key === 'a' || key === 'arrowleft' || e.ctrlKey && key === 'b') {
+    } else if (key === 'a' || key === 'arrowleft' || (e.ctrlKey && key === 'b')) {
       dir = 'left'
-    } else if (key === 'd' || key === 'arrowright' || e.ctrlKey && key === 'f') {
+    } else if (key === 'd' || key === 'arrowright' || (e.ctrlKey && key === 'f')) {
       dir = 'right'
     }
 
@@ -156,14 +157,23 @@ const App: React.FC = () => {
     setSelectedColors(newSelectedColors)
   }
 
-  function handleClick() {
+  function handleSolveClick() {
     const board = deepCopy4DArr(values)
     if (solveSudoku(board)) {
       updateTextColors(board)
       setValues(board)
     } else {
-      alert('Suck')
+      alert('This Sudoku board is not solvable!')
     }
+  }
+
+  function handleVisualizeClick() {
+    setTextColors(textColors
+      .map((boardRow, i) => boardRow
+      .map((boardCol, j) => boardCol
+      .map((sectionRow, k) => sectionRow
+      .map((_, l) => values[i][j][k][l] === '' ? TEXT_BLUE : BLACK)))))
+    solveSudokuVisualizer(deepCopy4DArr(values))
   }
 
   function setInputRefs() {
@@ -436,6 +446,65 @@ const App: React.FC = () => {
     return false
   }
 
+  async function solveSudokuVisualizer(board: string[][][][]) {
+    let boardRow!: number
+    let boardCol!: number
+    let sectionRow!: number
+    let sectionCol!: number
+    
+    const isFilled = board
+      .every((bRow, i) => bRow
+      .every((bCol, j) => bCol
+      .every((sRow, k) => sRow
+      .every((value, l) => {
+        if (value === '') {
+          boardRow = i
+          boardCol = j
+          sectionRow = k
+          sectionCol = l
+          return false
+        }
+        return true
+      }))))
+        
+    if (isFilled) return true
+
+    for (let num = 1; num <= NUMS; num++) {      
+      board[boardRow][boardCol][sectionRow][sectionCol] = num.toString()
+      const newLastIndices: Indices = {
+        boardRow,
+        boardCol,
+        sectionRow,
+        sectionCol
+      }
+      const newSelectedColor: (string | undefined)[][][][] = create4DArr(undefined)
+      newSelectedColor[boardRow][boardCol][sectionRow][sectionCol] = BLUE
+
+      setValues(deepCopy4DArr(board))
+      setLastIndices(newLastIndices)
+      setSelectedColors(newSelectedColor)
+      await timeout()
+
+      if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
+        if (await solveSudokuVisualizer(board)) {
+          return true
+        } else {
+          board[boardRow][boardCol][sectionRow][sectionCol] = ''
+          setValues(deepCopy4DArr(board))
+          setLastIndices(newLastIndices)
+          setSelectedColors(newSelectedColor)
+          await timeout()
+        }
+      } else {
+        board[boardRow][boardCol][sectionRow][sectionCol] = ''
+        setValues(deepCopy4DArr(board))
+        await timeout()
+      }
+    }
+
+    return false
+  }
+
   function updateTextColors(board: string[][][][]) {
     setTextColors(textColors
       .map((boardRow, i) => boardRow
@@ -553,8 +622,8 @@ const App: React.FC = () => {
     <div className='container flex-column'>
       {renderBoardRows()}
       <div className='buttons flex-column'>
-        <button onClick={handleClick}>Solve</button>
-        <button>Visualize</button>
+        <button onClick={handleSolveClick}>Solve</button>
+        <button onClick={handleVisualizeClick}>Visualize</button>
       </div>
     </div>
   )
@@ -572,6 +641,10 @@ function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
     .map(i => i
     .map(j => j
     .map(k => k.slice())))
+}
+
+function timeout() {
+  return new Promise(res => setTimeout(res, TIME))
 }
 
 export default App
