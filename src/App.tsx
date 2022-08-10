@@ -1,12 +1,12 @@
 import { useState, useEffect, createRef, useCallback } from 'react'
 import Block from './components/Block'
-import { RED, BLUE, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, BLACK } from './Colors'
+import { RED, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, BLACK } from './Colors'
 import './App.css'
 
 const SIZE = 3
 const NUMS = SIZE ** 2
 const MAX_LEN = NUMS.toString().length
-const TIME = 1000
+const TIME = 10
 
 const testBoard = [
   [
@@ -88,7 +88,7 @@ const App: React.FC = () => {
   // const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
   const [values, setValues] = useState<string[][][][]>(testBoard)
   const [colors, setColors] = useState<string[][][][]>(create4DArr(WHITE))
-  const [selectedColors, setSelectedColors] = useState<(string | undefined)[][][][]>(create4DArr(undefined))
+  const [areSelected, setAreSelected] = useState<boolean[][][][]>(create4DArr(false))
   const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
   const [lastIndices, setLastIndices] = useState<Indices | undefined>(undefined)
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
@@ -248,31 +248,31 @@ const App: React.FC = () => {
 
   const handleMove = useCallback((dir: string) => {
     let newIndices: Indices | undefined
-
-    const newSelectedColors: (string | undefined)[][][][] = selectedColors
+    
+    const newAreSelected: boolean[][][][] = areSelected
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map((selectedColor, l) => {
-        if (selectedColor !== undefined) {
+      .map((isSelected, l) => {
+        if (isSelected) {
           newIndices = getNewIndices(i, j, k, l, dir)
         }
-        return undefined
+        return false
       }))))
 
     if (newIndices === undefined) {
-      newSelectedColors[0][0][0][0] = BLUE
+      newAreSelected[0][0][0][0] = true
       inputRefs[0][0][0][0].current?.focus()
       highlightValues(0, 0, 0, 0)
     } else {
       const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
-      newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
+      newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
       inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
       highlightValues(boardRow, boardCol, sectionRow, sectionCol)
     }
 
-    setSelectedColors(newSelectedColors)
-  }, [inputRefs, selectedColors, highlightValues])
+    setAreSelected(newAreSelected)
+  }, [inputRefs, areSelected, highlightValues])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const key = e.key.toLowerCase()
@@ -477,12 +477,12 @@ const App: React.FC = () => {
         sectionRow,
         sectionCol
       }
-      const newSelectedColor: (string | undefined)[][][][] = create4DArr(undefined)
-      newSelectedColor[boardRow][boardCol][sectionRow][sectionCol] = BLUE
+      const newAreSelected = create4DArr(false)
+      newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
 
       setValues(deepCopy4DArr(board))
       setLastIndices(newLastIndices)
-      setSelectedColors(newSelectedColor)
+      setAreSelected(newAreSelected)
       await timeout()
 
       if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
@@ -492,7 +492,7 @@ const App: React.FC = () => {
           board[boardRow][boardCol][sectionRow][sectionCol] = ''
           setValues(deepCopy4DArr(board))
           setLastIndices(newLastIndices)
-          setSelectedColors(newSelectedColor)
+          setAreSelected(newAreSelected)
           await timeout()
         }
       } else {
@@ -544,8 +544,8 @@ const App: React.FC = () => {
           inputRef ={inputRefs[boardRow][boardCol][i][j]}
           color={colors[boardRow][boardCol][i][j]}
           textColor={textColors[boardRow][boardCol][i][j]}
-          selectedColors={selectedColors}
-          setSelectedColors={setSelectedColors}
+          areSelected={areSelected}
+          setAreSelected={setAreSelected}
           setLastIndices={setLastIndices}
           highlightValues={highlightValues}
         />

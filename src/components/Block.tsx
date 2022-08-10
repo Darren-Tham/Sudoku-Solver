@@ -11,13 +11,13 @@ interface Props {
   inputRef: React.RefObject<HTMLInputElement>
   color: string
   textColor: string;
-  selectedColors: (string | undefined)[][][][];
-  setSelectedColors: React.Dispatch<React.SetStateAction<(string | undefined)[][][][]>>;
+  areSelected: boolean[][][][];
+  setAreSelected: React.Dispatch<React.SetStateAction<boolean[][][][]>>;
   setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
   highlightValues: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, selectedColors, setSelectedColors, setLastIndices, highlightValues }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, areSelected, setAreSelected, setLastIndices, highlightValues }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -27,8 +27,9 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
   }
 
   function setBackgroundColor() {
-    const selectedColor = getEleFromArr(selectedColors)
-    return selectedColor === undefined ? color : selectedColor
+    const isSelected = getEleFromArr(areSelected)
+
+    return isSelected ? BLUE : color
   }
 
   function validNumber(numStr: string): boolean {
@@ -59,9 +60,9 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
   }
 
   function handleClick() {
-    const newSelectedColors: (string | undefined)[][][][] = create4DArr(undefined)
-    newSelectedColors[boardRow][boardCol][sectionRow][sectionCol] = BLUE
-    setSelectedColors(newSelectedColors)
+    const newAreSelected = create4DArr(false)
+    newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
+    setAreSelected(newAreSelected)
     highlightValues(boardRow, boardCol, sectionRow, sectionCol)
   }
 
