@@ -17,8 +17,6 @@ body {
 }
 
 .container {
-  display: flex;
-  justify-content: center;
   align-items: center;
 }
 
@@ -34,13 +32,6 @@ input {
   outline: none;
 }
 
-.buttons {
-  position: absolute;
-  justify-content: space-between;
-  align-items: center;
-  right: 15%;
-}
-
 button {
   width: 200px;
   height: 100px;
@@ -49,7 +40,7 @@ button {
   border: none;
   color: white;
   background-color: #0072e2;
-  margin: 10px 0;
+  margin: 20px 20px 0 20px;
   border-radius: 10px;
   cursor: pointer;
   letter-spacing: 0.5px;

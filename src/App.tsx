@@ -85,7 +85,7 @@ interface UniqueValues {
 
 const App: React.FC = () => {
 
-  // const [values, setValues] = useState<string[][][][]>(create4DArr<string>(''))
+  // const [values, setValues] = useState<string[][][][]>(create4DArr(''))
   const [values, setValues] = useState<string[][][][]>(testBoard)
   const [colors, setColors] = useState<string[][][][]>(create4DArr(WHITE))
   const [areSelected, setAreSelected] = useState<boolean[][][][]>(create4DArr(false))
@@ -325,10 +325,18 @@ const App: React.FC = () => {
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map((_, l) => values[i][j][k][l] === '' ? TEXT_BLUE : BLACK)))))
+      .map((textColor, l) => values[i][j][k][l] === '' ? TEXT_BLUE : textColor)))))
     if (!await solveSudokuVisualizer(deepCopy4DArr(values))) {
       alert('This Sudoku board is not solvable!')
     }
+  }
+
+  function handleResetClick() {
+    setValues(create4DArr(''))
+    setColors(create4DArr(WHITE))
+    setAreSelected(create4DArr(false))
+    setTextColors(create4DArr(BLACK))
+    setLastIndices(undefined)
   }
 
   function setInputRefs() {
@@ -501,7 +509,7 @@ const App: React.FC = () => {
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
-      .map((_, l) => values[i][j][k][l] === board[i][j][k][l] ? BLACK : TEXT_BLUE)))))
+      .map((textColor, l) => values[i][j][k][l] === board[i][j][k][l] && textColor !== TEXT_BLUE ? BLACK : TEXT_BLUE)))))
   }
 
   function renderSectionRows (boardRow: number, boardCol: number) {
@@ -611,10 +619,13 @@ const App: React.FC = () => {
 
   return (
     <div className='container flex-column'>
-      {renderBoardRows()}
-      <div className='buttons flex-column'>
+      <div className='flex-column'>
+        {renderBoardRows()}
+      </div>
+      <div className='buttons'>
         <button onClick={handleSolveClick}>Solve</button>
         <button onClick={handleVisualizeClick}>Visualize</button>
+        <button onClick={handleResetClick}>Reset</button>
       </div>
     </div>
   )
