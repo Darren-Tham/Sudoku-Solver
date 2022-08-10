@@ -320,13 +320,15 @@ const App: React.FC = () => {
     }
   }
 
-  function handleVisualizeClick() {
+  async function handleVisualizeClick() {
     setTextColors(textColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
       .map((_, l) => values[i][j][k][l] === '' ? TEXT_BLUE : BLACK)))))
-    solveSudokuVisualizer(deepCopy4DArr(values))
+    if (!await solveSudokuVisualizer(deepCopy4DArr(values))) {
+      alert('This Sudoku board is not solvable!')
+    }
   }
 
   function setInputRefs() {
@@ -409,28 +411,34 @@ const App: React.FC = () => {
     return true
   }
 
-  function solveSudoku(board: string[][][][]) {
-    let boardRow!: number
-    let boardCol!: number
-    let sectionRow!: number
-    let sectionCol!: number
-    
-    const isFilled = board
+  function getEmptyIndices(board: string[][][][]) {
+    let emptyIndices: Indices | undefined
+
+     board
       .every((bRow, i) => bRow
       .every((bCol, j) => bCol
       .every((sRow, k) => sRow
       .every((value, l) => {
         if (value === '') {
-          boardRow = i
-          boardCol = j
-          sectionRow = k
-          sectionCol = l
+          emptyIndices = {
+            boardRow: i,
+            boardCol: j,
+            sectionRow: k,
+            sectionCol: l
+          }
           return false
         }
         return true
       }))))
+    
+      return emptyIndices
+  }
+
+  function solveSudoku(board: string[][][][]) {
+    const emptyIndices = getEmptyIndices(board)
         
-    if (isFilled) return true
+    if (emptyIndices === undefined) return true
+    const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
 
     for (let num = 1; num <= NUMS; num++) {
       if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
@@ -447,27 +455,10 @@ const App: React.FC = () => {
   }
 
   async function solveSudokuVisualizer(board: string[][][][]) {
-    let boardRow!: number
-    let boardCol!: number
-    let sectionRow!: number
-    let sectionCol!: number
-    
-    const isFilled = board
-      .every((bRow, i) => bRow
-      .every((bCol, j) => bCol
-      .every((sRow, k) => sRow
-      .every((value, l) => {
-        if (value === '') {
-          boardRow = i
-          boardCol = j
-          sectionRow = k
-          sectionCol = l
-          return false
-        }
-        return true
-      }))))
+    const emptyIndices = getEmptyIndices(board)
         
-    if (isFilled) return true
+    if (emptyIndices === undefined) return true
+    const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
 
     for (let num = 1; num <= NUMS; num++) {      
       board[boardRow][boardCol][sectionRow][sectionCol] = num.toString()
