@@ -1,6 +1,6 @@
 import { useState, useEffect, createRef, useCallback } from 'react'
 import Block from './components/Block'
-import { RED, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, BLACK } from './Colors'
+import { RED, GREEN, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, GRAY, BLACK } from './Colors'
 import './App.css'
 
 const SIZE = 3
@@ -9,6 +9,7 @@ const MAX_LEN = NUMS.toString().length
 const TIME = 1000
 const DECREMENT = 10
 const MIN_TIME = 10
+const FINALIZE_TIME = 25
 
 const testBoard = [
   [
@@ -64,8 +65,8 @@ const testBoard = [
   ]
 ]
 
-const BLACK_BORDER = '3px solid #000000'
-const GRAY_BORDER = '1.5px solid #bfbfbf'
+const BLACK_BORDER = `3px solid ${BLACK}`
+const GRAY_BORDER = `1.5px solid ${GRAY}`
 
 interface Border {
   borderTop: string;
@@ -313,11 +314,14 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  function handleSolveClick() {
+  async function handleSolveClick() {
     const board = deepCopy4DArr(values)
     if (solveSudoku(board)) {
       updateTextColors(board)
       setValues(board)
+      setAreSelected(create4DArr(false))
+      setLastIndices(undefined)
+      finalizeColors()
     } else {
       alert('This Sudoku board is not solvable!')
     }
@@ -522,6 +526,34 @@ const App: React.FC = () => {
       .map((textColor, l) => values[i][j][k][l] === board[i][j][k][l] && textColor !== TEXT_BLUE ? BLACK : TEXT_BLUE)))))
   }
 
+  async function finalizeColors() {
+    const newColors: string[][] = new Array(NUMS).fill(undefined).map(() => new Array(NUMS).fill(WHITE))
+
+    for (let i = 0; i < NUMS; i++) {
+      let row = i
+      let col = 0
+
+      while (row >= 0) {
+        newColors[row--][col++] = GREEN
+      }
+
+      setColors(twoDimToFourDim(newColors))
+      await timeout(FINALIZE_TIME)
+    }
+
+    for (let i = 1; i < NUMS; i++) {
+      let row = NUMS - 1
+      let col = i
+
+      while (col < NUMS) {
+        newColors[row--][col++] = GREEN
+      }
+
+      setColors(twoDimToFourDim(newColors))
+      await timeout(FINALIZE_TIME)
+    }
+  }
+
   function renderSectionRows (boardRow: number, boardCol: number) {
     const rows = []
 
@@ -659,11 +691,34 @@ function create4DArr<T>(value: T): T[][][][] {
     .map(() => new Array(SIZE).fill(value))))
 }
 
+
 function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
   return A
     .map(i => i
     .map(j => j
     .map(k => k.slice())))
+}
+
+function twoDimToFourDim(A: string[][]) {
+  const newA = []
+
+  for (let i = 0; i < SIZE; i++) {
+    const boardRow = []
+    for (let j = 0; j < SIZE; j++) {
+      const sectionRows = []
+			for (let k = 0; k < SIZE; k++) {
+        const sectionRow = []
+				for (let l = 0; l < SIZE; l++) {
+					sectionRow.push(A[i * SIZE + k][j * SIZE + l])
+        }
+        sectionRows.push(sectionRow)
+      }
+      boardRow.push(sectionRows)
+    }
+    newA.push(boardRow)
+  }
+  
+	return newA
 }
 
 function timeout(time: number) {

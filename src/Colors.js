@@ -1,17 +1,9 @@
-const RED = '#ff928a'
-const BLUE = '#c2e8ff'
-const LIGHT_BLUE = '#e8f2fc'
-const TEXT_BLUE = '#007cfa'
-const PURPLE = '#d9ccff'
-const WHITE = '#ffffff'
-const BLACK = '#000000'
-
-export {
-  RED,
-  BLUE,
-  LIGHT_BLUE,
-  TEXT_BLUE,
-  PURPLE,
-  WHITE,
-  BLACK
-}
+export const RED = '#ff928a'
+export const GREEN = '#b3ffc7'
+export const BLUE = '#c2e8ff'
+export const LIGHT_BLUE = '#e8f2fc'
+export const TEXT_BLUE = '#007cfa'
+export const PURPLE = '#d9ccff'
+export const WHITE = '#ffffff'
+export const GRAY = '#bfbfbf'
+export const BLACK = '#000000'
