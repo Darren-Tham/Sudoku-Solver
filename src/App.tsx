@@ -8,7 +8,7 @@ const NUMS = SIZE ** 2
 const MAX_LEN = NUMS.toString().length
 const TIME = 1000
 const DECREMENT = 10
-const MIN_TIME = 10
+const MIN_TIME = 50
 const FINALIZE_TIME = 25
 
 const testBoard = [
@@ -314,7 +314,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  async function handleSolveClick() {
+  function handleSolveClick() {
     const board = deepCopy4DArr(values)
     if (solveSudoku(board)) {
       updateTextColors(board)
@@ -383,6 +383,10 @@ const App: React.FC = () => {
       .map((textColor, l) => values[i][j][k][l] === '' ? TEXT_BLUE : textColor)))))
     if (!await solveSudokuVisualizer(deepCopy4DArr(values))) {
       alert('This Sudoku board is not solvable!')
+    } else {
+      setAreSelected(create4DArr(false))
+      setLastIndices(undefined)
+      await finalizeColors()
     }
     setIsSolving(false)
   }
