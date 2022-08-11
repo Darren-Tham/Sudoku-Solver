@@ -313,8 +313,8 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
-
-  function handleSolveClick() {
+  
+  const handleSolveClick = () => {
     const board = deepCopy4DArr(values)
     if (solveSudoku(board)) {
       updateTextColors(board)
@@ -327,10 +327,10 @@ const App: React.FC = () => {
     }
   }
 
-  async function handleVisualizeClick() {
+  const handleVisualizeClick = async () => {
     let time = TIME
 
-    async function solveSudokuVisualizer(board: string[][][][]) {
+    const solveSudokuVisualizer = async (board: string[][][][]) => {
       const emptyIndices = getEmptyIndices(board)
           
       if (emptyIndices === undefined) return true
@@ -391,7 +391,7 @@ const App: React.FC = () => {
     setIsSolving(false)
   }
 
-  function handleResetClick() {
+  const handleResetClick = () => {
     setValues(create4DArr(''))
     setColors(create4DArr(WHITE))
     setAreSelected(create4DArr(false))
@@ -399,15 +399,7 @@ const App: React.FC = () => {
     setLastIndices(undefined)
   }
 
-  function setInputRefs() {
-    return new Array(SIZE).fill(undefined)
-    .map(() => new Array(SIZE).fill(undefined)
-    .map(() => new Array(SIZE).fill(undefined)
-    .map(() => new Array(SIZE).fill(undefined)
-    .map(() => createRef<HTMLInputElement>()))))
-  }
-
-  function getNewIndices(boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, dir: string) {
+  const getNewIndices = (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, dir: string) => {
     switch (dir) {
       case 'up': {
         let inBounds = sectionRow - 1 >= 0
@@ -451,7 +443,7 @@ const App: React.FC = () => {
     }
   }
 
-  function isSafe(board: string[][][][], value: string, boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) {
+  const isSafe = (board: string[][][][], value: string, boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => {
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
         if (i === boardCol && j === sectionCol) continue
@@ -479,7 +471,7 @@ const App: React.FC = () => {
     return true
   }
 
-  function getEmptyIndices(board: string[][][][]) {
+  const getEmptyIndices = (board: string[][][][]) => {
     let emptyIndices: Indices | undefined
 
      board
@@ -502,7 +494,7 @@ const App: React.FC = () => {
       return emptyIndices
   }
 
-  function solveSudoku(board: string[][][][]) {
+  const solveSudoku = (board: string[][][][]) => {
     const emptyIndices = getEmptyIndices(board)
         
     if (emptyIndices === undefined) return true
@@ -522,7 +514,7 @@ const App: React.FC = () => {
     return false
   }
 
-  function updateTextColors(board: string[][][][]) {
+  const updateTextColors = (board: string[][][][]) => {
     setTextColors(textColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
@@ -530,7 +522,7 @@ const App: React.FC = () => {
       .map((textColor, l) => values[i][j][k][l] === board[i][j][k][l] && textColor !== TEXT_BLUE ? BLACK : TEXT_BLUE)))))
   }
 
-  async function finalizeColors() {
+  const finalizeColors = async() => {
     const newColors: string[][] = new Array(NUMS).fill(undefined).map(() => new Array(NUMS).fill(WHITE))
 
     for (let i = 0; i < NUMS; i++) {
@@ -558,7 +550,7 @@ const App: React.FC = () => {
     }
   }
 
-  function renderSectionRows (boardRow: number, boardCol: number) {
+  const renderSectionRows = (boardRow: number, boardCol: number) => {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -618,7 +610,7 @@ const App: React.FC = () => {
     )
   }
   
-  function renderBoardRows() {
+  const renderBoardRows = () => {
     const rows = []
 
     for (let i = 0; i < SIZE; i++) {
@@ -664,7 +656,7 @@ const App: React.FC = () => {
     )
   }
 
-  function renderButtons() {
+  const renderButtons = () => {
     if (isSolving) return
 
     return (
@@ -688,22 +680,29 @@ const App: React.FC = () => {
   )
 }
 
-function create4DArr<T>(value: T): T[][][][] {
+const setInputRefs = () => {
+  return new Array(SIZE).fill(undefined)
+    .map(() => new Array(SIZE).fill(undefined)
+    .map(() => new Array(SIZE).fill(undefined)
+    .map(() => new Array(SIZE).fill(undefined)
+    .map(() => createRef<HTMLInputElement>()))))
+}
+
+const create4DArr = <T,>(value: T) => {
   return new Array(SIZE).fill(undefined)
     .map(() => new Array(SIZE).fill(undefined)
     .map(() => new Array(SIZE).fill(undefined)
     .map(() => new Array(SIZE).fill(value))))
 }
 
-
-function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
+const deepCopy4DArr = <T,>(A: T[][][][]) => {
   return A
     .map(i => i
     .map(j => j
     .map(k => k.slice())))
 }
 
-function twoDimToFourDim(A: string[][]) {
+const twoDimToFourDim = (A: string[][]) => {
   const newA = []
 
   for (let i = 0; i < SIZE; i++) {
@@ -725,13 +724,9 @@ function twoDimToFourDim(A: string[][]) {
 	return newA
 }
 
-function timeout(time: number) {
-  return new Promise(res => setTimeout(res, time))  
-}
+const timeout = (time: number) => new Promise(res => setTimeout(res, time))
 
-function decrement(time: number) {
-  return time < MIN_TIME ? MIN_TIME : time - DECREMENT
-}
+const decrement = (time: number) => time < MIN_TIME ? MIN_TIME : time - DECREMENT
 
 export default App
 

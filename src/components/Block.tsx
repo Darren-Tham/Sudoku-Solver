@@ -23,22 +23,14 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
 
-  function getEleFromArr<T>(A: T[][][][]): T {
-    return A[boardRow][boardCol][sectionRow][sectionCol]
-  }
+  const setBackgroundColor = () => areSelected[boardRow][boardCol][sectionRow][sectionCol] ? BLUE : color
 
-  function setBackgroundColor() {
-    const isSelected = getEleFromArr(areSelected)
-
-    return isSelected ? BLUE : color
-  }
-
-  function validNumber(numStr: string): boolean {
-    const num = Number(numStr)
+  const validNumber = (value: string) => {
+    const num = Number(value)
     return num > 0 && num <= NUMS
   }
   
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { value } = e.target
 
     if (value.includes(' ') || value.includes('.')) return
@@ -60,7 +52,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
     }
   }
 
-  function handleClick() {
+  const handleClick = () => {
     const newAreSelected = create4DArr(false)
     newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
     setAreSelected(newAreSelected)
