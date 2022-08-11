@@ -15,9 +15,10 @@ interface Props {
   setAreSelected: React.Dispatch<React.SetStateAction<boolean[][][][]>>;
   setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
   highlightValues: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
+  isSolving: boolean
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, areSelected, setAreSelected, setLastIndices, highlightValues }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, areSelected, setAreSelected, setLastIndices, highlightValues, isSolving }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -71,7 +72,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
       type='text'
       value={values[boardRow][boardCol][sectionRow][sectionCol]}
       onChange={isChangeable ? handleChange : undefined}
-      onClick={handleClick}
+      onClick={isSolving ? undefined : handleClick}
       style={{
         borderTop,
         borderLeft,

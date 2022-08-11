@@ -6,7 +6,9 @@ import './App.css'
 const SIZE = 3
 const NUMS = SIZE ** 2
 const MAX_LEN = NUMS.toString().length
-const TIME = 10
+const TIME = 1000
+const DECREMENT = 10
+const MIN_TIME = 10
 
 const testBoard = [
   [
@@ -91,6 +93,7 @@ const App: React.FC = () => {
   const [areSelected, setAreSelected] = useState<boolean[][][][]>(create4DArr(false))
   const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
   const [lastIndices, setLastIndices] = useState<Indices | undefined>(undefined)
+  const [isSolving, setIsSolving] = useState<boolean>(false)
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
   const checkRows = useCallback((newColors: string[][][][]) => {
@@ -321,6 +324,54 @@ const App: React.FC = () => {
   }
 
   async function handleVisualizeClick() {
+    let time = TIME
+
+    async function solveSudokuVisualizer(board: string[][][][]) {
+      const emptyIndices = getEmptyIndices(board)
+          
+      if (emptyIndices === undefined) return true
+      const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
+
+      for (let num = 1; num <= NUMS; num++) {
+        board[boardRow][boardCol][sectionRow][sectionCol] = num.toString()
+        const newLastIndices: Indices = {
+          boardRow,
+          boardCol,
+          sectionRow,
+          sectionCol
+        }
+        const newAreSelected = create4DArr(false)
+        newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
+
+        setValues(deepCopy4DArr(board))
+        setLastIndices(newLastIndices)
+        setAreSelected(newAreSelected)
+        await timeout(time)
+        time = decrement(time)
+
+        if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
+          if (await solveSudokuVisualizer(board)) {
+            return true
+          } else {
+            board[boardRow][boardCol][sectionRow][sectionCol] = ''
+            setValues(deepCopy4DArr(board))
+            setLastIndices(newLastIndices)
+            setAreSelected(newAreSelected)
+            await timeout(time)
+            time = decrement(time)
+          }
+        } else {
+          board[boardRow][boardCol][sectionRow][sectionCol] = ''
+          setValues(deepCopy4DArr(board))
+          await timeout(time)
+          time = decrement(time)
+        }
+      }
+
+      return false
+    }
+
+    setIsSolving(true)
     setTextColors(textColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
@@ -329,6 +380,7 @@ const App: React.FC = () => {
     if (!await solveSudokuVisualizer(deepCopy4DArr(values))) {
       alert('This Sudoku board is not solvable!')
     }
+    setIsSolving(false)
   }
 
   function handleResetClick() {
@@ -462,48 +514,6 @@ const App: React.FC = () => {
     return false
   }
 
-  async function solveSudokuVisualizer(board: string[][][][]) {
-    const emptyIndices = getEmptyIndices(board)
-        
-    if (emptyIndices === undefined) return true
-    const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
-
-    for (let num = 1; num <= NUMS; num++) {      
-      board[boardRow][boardCol][sectionRow][sectionCol] = num.toString()
-      const newLastIndices: Indices = {
-        boardRow,
-        boardCol,
-        sectionRow,
-        sectionCol
-      }
-      const newAreSelected = create4DArr(false)
-      newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
-
-      setValues(deepCopy4DArr(board))
-      setLastIndices(newLastIndices)
-      setAreSelected(newAreSelected)
-      await timeout()
-
-      if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
-        if (await solveSudokuVisualizer(board)) {
-          return true
-        } else {
-          board[boardRow][boardCol][sectionRow][sectionCol] = ''
-          setValues(deepCopy4DArr(board))
-          setLastIndices(newLastIndices)
-          setAreSelected(newAreSelected)
-          await timeout()
-        }
-      } else {
-        board[boardRow][boardCol][sectionRow][sectionCol] = ''
-        setValues(deepCopy4DArr(board))
-        await timeout()
-      }
-    }
-
-    return false
-  }
-
   function updateTextColors(board: string[][][][]) {
     setTextColors(textColors
       .map((boardRow, i) => boardRow
@@ -547,6 +557,7 @@ const App: React.FC = () => {
           setAreSelected={setAreSelected}
           setLastIndices={setLastIndices}
           highlightValues={highlightValues}
+          isSolving={isSolving}
         />
         
         blocks.push(block)
@@ -617,15 +628,25 @@ const App: React.FC = () => {
     )
   }
 
+  function renderButtons() {
+    if (isSolving) return
+
+    return (
+      <>
+        <button onClick={handleSolveClick}>Solve</button>
+        <button onClick={handleVisualizeClick}>Visualize</button>
+        <button onClick={handleResetClick}>Reset</button>
+      </>
+    )
+  }
+
   return (
     <div className='container flex-column'>
       <div className='flex-column'>
         {renderBoardRows()}
       </div>
       <div className='buttons'>
-        <button onClick={handleSolveClick}>Solve</button>
-        <button onClick={handleVisualizeClick}>Visualize</button>
-        <button onClick={handleResetClick}>Reset</button>
+        {renderButtons()}
       </div>
     </div>
   )
@@ -645,8 +666,12 @@ function deepCopy4DArr<T>(A: T[][][][]): T[][][][] {
     .map(k => k.slice())))
 }
 
-function timeout() {
-  return new Promise(res => setTimeout(res, TIME))
+function timeout(time: number) {
+  return new Promise(res => setTimeout(res, time))  
+}
+
+function decrement(time: number) {
+  return time < MIN_TIME ? MIN_TIME : time - DECREMENT
 }
 
 export default App
