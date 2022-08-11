@@ -279,6 +279,8 @@ const App: React.FC = () => {
   }, [inputRefs, areSelected, highlightValues])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (isSolving) return
+
     const key = e.key.toLowerCase()
     const disabledChars = ['a', 'b', 'o', 'p']
     const disabledArrows = ['arrowup', 'arrowleft']
@@ -301,7 +303,7 @@ const App: React.FC = () => {
     if (dir !== undefined) {
       handleMove(dir)
     }
-  }, [handleMove])
+  }, [handleMove, isSolving])
 
   useEffect(() => {
     if (lastIndices === undefined) return
@@ -314,17 +316,19 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
   
-  const handleSolveClick = () => {
+  const handleSolveClick = async () => {
     const board = deepCopy4DArr(values)
+    setIsSolving(true)
     if (solveSudoku(board)) {
       updateTextColors(board)
       setValues(board)
       setAreSelected(create4DArr(false))
       setLastIndices(undefined)
-      finalizeColors()
+      await finalizeColors()
     } else {
       alert('This Sudoku board is not solvable!')
     }
+    setIsSolving(false)
   }
 
   const handleVisualizeClick = async () => {
