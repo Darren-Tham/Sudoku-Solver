@@ -12,7 +12,7 @@ const DECREMENT = 10
 const MIN_TIME = 50
 const FINALIZE_TIME = 25
 
-const testBoard = [
+const exampleBoard = [
   [
     [
       ['', '', '7'],
@@ -89,8 +89,7 @@ interface UniqueValues {
 
 const App: React.FC = () => {
 
-  // const [values, setValues] = useState<string[][][][]>(create4DArr(''))
-  const [values, setValues] = useState<string[][][][]>(testBoard)
+  const [values, setValues] = useState<string[][][][]>(exampleBoard)
   const [colors, setColors] = useState<string[][][][]>(create4DArr(WHITE))
   const [areSelected, setAreSelected] = useState<boolean[][][][]>(create4DArr(false))
   const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
