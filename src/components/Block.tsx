@@ -1,5 +1,5 @@
 import { NUMS, MAX_LEN, Border, Indices, create4DArr, deepCopy4DArr } from '../App'
-import { BLUE } from '../Colors'
+import { BLACK, BLUE } from '../Colors'
 
 interface Props {
   value: string;
@@ -10,7 +10,8 @@ interface Props {
   setValues: React.Dispatch<React.SetStateAction<string[][][][]>>;
   inputRef: React.RefObject<HTMLInputElement>
   color: string
-  textColor: string;
+  textColors: string[][][][];
+  setTextColors: React.Dispatch<React.SetStateAction<string[][][][]>>;
   areSelected: boolean[][][][];
   setAreSelected: React.Dispatch<React.SetStateAction<boolean[][][][]>>;
   setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
@@ -18,7 +19,7 @@ interface Props {
   isSolving: boolean
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColor, areSelected, setAreSelected, setLastIndices, highlightValues, isSolving }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColors, setTextColors, areSelected, setAreSelected, setLastIndices, highlightValues, isSolving }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -41,8 +42,12 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
     if (value === '' || validNumber(value)) {
       const newValues = deepCopy4DArr(values)
+      const newTextColors = deepCopy4DArr(textColors)
       newValues[boardRow][boardCol][sectionRow][sectionCol] = value
+      newTextColors[boardRow][boardCol][sectionRow][sectionCol] = BLACK
+
       setValues(newValues)
+      setTextColors(newTextColors)
       setLastIndices({
         boardRow,
         boardCol,
@@ -69,7 +74,7 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
         borderTop,
         borderLeft,
         backgroundColor: setBackgroundColor(),
-        color: textColor
+        color: textColors[boardRow][boardCol][sectionRow][sectionCol]
       }}
       ref={inputRef}
     />

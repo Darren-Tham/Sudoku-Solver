@@ -1,7 +1,8 @@
 import { useState, useEffect, createRef, useCallback } from 'react'
 import Block from './components/Block'
-import { RED, GREEN, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, GRAY, BLACK } from './Colors'
+import { RED, LIGHT_GREEN, LIGHT_BLUE, TEXT_BLUE, PURPLE, WHITE, GRAY, BLACK } from './Colors'
 import './App.css'
+import ProgressBar from './components/ProgressBar'
 
 const SIZE = 3
 const NUMS = SIZE ** 2
@@ -95,6 +96,8 @@ const App: React.FC = () => {
   const [textColors, setTextColors] = useState<string[][][][]>(create4DArr(BLACK))
   const [lastIndices, setLastIndices] = useState<Indices | undefined>(undefined)
   const [isSolving, setIsSolving] = useState<boolean>(false)
+  const [progressBarWidth, setProgressBarWidth] = useState<number>(0)
+  const [transitionTime, setTransitionTime] = useState<number>(TIME)
   const [inputRefs] = useState<React.RefObject<HTMLInputElement>[][][][]>(setInputRefs())
 
   const checkRows = useCallback((newColors: string[][][][]) => {
@@ -318,8 +321,7 @@ const App: React.FC = () => {
   
   const handleSolveClick = async () => {
     const board = deepCopy4DArr(values)
-    setIsSolving(true)
-    if (solveSudoku(board)) {
+    if (isValidBoard() && solveSudoku(board)) {
       updateTextColors(board)
       setValues(board)
       setAreSelected(create4DArr(false))
@@ -327,16 +329,18 @@ const App: React.FC = () => {
       await finalizeColors()
     } else {
       alert('This Sudoku board is not solvable!')
+      refocus()
     }
-    setIsSolving(false)
   }
 
   const handleVisualizeClick = async () => {
+    const numOfSteps = getNumOfSteps(deepCopy4DArr(values)).step
     let time = TIME
+    let step = 1
 
     const solveSudokuVisualizer = async (board: string[][][][]) => {
       const emptyIndices = getEmptyIndices(board)
-          
+
       if (emptyIndices === undefined) return true
       const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
 
@@ -354,6 +358,8 @@ const App: React.FC = () => {
         setValues(deepCopy4DArr(board))
         setLastIndices(newLastIndices)
         setAreSelected(newAreSelected)
+        setTransitionTime(time)
+        setProgressBarWidth(step++ / numOfSteps)
         await timeout(time)
         time = decrement(time)
 
@@ -365,12 +371,16 @@ const App: React.FC = () => {
             setValues(deepCopy4DArr(board))
             setLastIndices(newLastIndices)
             setAreSelected(newAreSelected)
+            setTransitionTime(time)
+            setProgressBarWidth(step++ / numOfSteps)
             await timeout(time)
             time = decrement(time)
           }
         } else {
           board[boardRow][boardCol][sectionRow][sectionCol] = ''
           setValues(deepCopy4DArr(board))
+          setTransitionTime(time)
+          setProgressBarWidth(step++ / numOfSteps)
           await timeout(time)
           time = decrement(time)
         }
@@ -379,19 +389,28 @@ const App: React.FC = () => {
       return false
     }
 
+    if (numOfSteps === 0) {
+      setProgressBarWidth(1)
+    }
+    
     setIsSolving(true)
     setTextColors(textColors
       .map((boardRow, i) => boardRow
       .map((boardCol, j) => boardCol
       .map((sectionRow, k) => sectionRow
       .map((textColor, l) => values[i][j][k][l] === '' ? TEXT_BLUE : textColor)))))
-    if (!await solveSudokuVisualizer(deepCopy4DArr(values))) {
-      alert('This Sudoku board is not solvable!')
-    } else {
+      
+    await new Promise(res => setTimeout(res, 0))
+
+    if (isValidBoard() && await solveSudokuVisualizer(deepCopy4DArr(values))) {
       setAreSelected(create4DArr(false))
       setLastIndices(undefined)
-      await finalizeColors()
+      await finalizeColors()      
+    } else {
+      alert('This Sudoku board is not solvable!')
     }
+    setProgressBarWidth(0)
+    setTransitionTime(TIME)
     setIsSolving(false)
   }
 
@@ -401,6 +420,9 @@ const App: React.FC = () => {
     setAreSelected(create4DArr(false))
     setTextColors(create4DArr(BLACK))
     setLastIndices(undefined)
+    setIsSolving(false)
+    setProgressBarWidth(0)
+    setTransitionTime(TIME)
   }
 
   const getNewIndices = (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number, dir: string) => {
@@ -447,6 +469,34 @@ const App: React.FC = () => {
     }
   }
 
+  const getNumOfSteps = (board: string[][][][]): { step: number, isSolved: boolean } => {
+    const emptyIndices = getEmptyIndices(board)
+    
+    if (emptyIndices === undefined) return { step: 0, isSolved: true}
+    const { boardRow, boardCol, sectionRow, sectionCol } = emptyIndices
+    let step = 0
+    
+    for (let num = 1; num <= NUMS; num++) {
+      step++
+      if (isSafe(board, num.toString(), boardRow, boardCol, sectionRow, sectionCol)) {
+        board[boardRow][boardCol][sectionRow][sectionCol] = num.toString()
+
+        const { step: nextSteps, isSolved } = getNumOfSteps(board)
+        step += nextSteps
+        if (isSolved) {
+          return { step, isSolved: true }
+        } else {
+          step++
+          board[boardRow][boardCol][sectionRow][sectionCol] = ''
+        }
+      } else {
+        step++
+      }
+    }
+
+    return { step, isSolved: false }
+  }
+
   const isSafe = (board: string[][][][], value: string, boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => {
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE; j++) {
@@ -473,6 +523,21 @@ const App: React.FC = () => {
     }
 
     return true
+  }
+
+  const isValidBoard = () => {
+    return colors
+      .every(boardRow => boardRow
+      .every(boardCol => boardCol
+      .every(sectionRow => sectionRow
+      .every(color => color !== RED))))
+  }
+  
+  const refocus = () => {
+    if (lastIndices === undefined) return
+
+    const { boardRow, boardCol, sectionRow, sectionCol } = lastIndices
+    inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
   }
 
   const getEmptyIndices = (board: string[][][][]) => {
@@ -534,7 +599,7 @@ const App: React.FC = () => {
       let col = 0
 
       while (row >= 0) {
-        newColors[row--][col++] = GREEN
+        newColors[row--][col++] = LIGHT_GREEN
       }
 
       setColors(twoDimToFourDim(newColors))
@@ -546,7 +611,7 @@ const App: React.FC = () => {
       let col = i
 
       while (col < NUMS) {
-        newColors[row--][col++] = GREEN
+        newColors[row--][col++] = LIGHT_GREEN
       }
 
       setColors(twoDimToFourDim(newColors))
@@ -584,7 +649,8 @@ const App: React.FC = () => {
           setValues={setValues}
           inputRef ={inputRefs[boardRow][boardCol][i][j]}
           color={colors[boardRow][boardCol][i][j]}
-          textColor={textColors[boardRow][boardCol][i][j]}
+          textColors={textColors}
+          setTextColors={setTextColors}
           areSelected={areSelected}
           setAreSelected={setAreSelected}
           setLastIndices={setLastIndices}
@@ -660,16 +726,21 @@ const App: React.FC = () => {
     )
   }
 
-  const renderButtons = () => {
-    if (isSolving) return
-
-    return (
-      <>
-        <button onClick={handleSolveClick}>Solve</button>
-        <button onClick={handleVisualizeClick}>Visualize</button>
-        <button onClick={handleResetClick}>Reset</button>
-      </>
-    )
+  const renderBottom = () => {
+    if (isSolving) {
+      return <ProgressBar
+        width={progressBarWidth}
+        time={transitionTime}
+      />
+    } else {
+      return (
+        <>
+          <button onClick={handleSolveClick}>Solve</button>
+          <button onClick={handleVisualizeClick}>Visualize</button>
+          <button onClick={handleResetClick}>Reset</button>
+        </>
+      )
+    }
   }
 
   return (
@@ -677,8 +748,8 @@ const App: React.FC = () => {
       <div className='flex-column'>
         {renderBoardRows()}
       </div>
-      <div className='buttons'>
-        {renderButtons()}
+      <div>
+        {renderBottom()}
       </div>
     </div>
   )

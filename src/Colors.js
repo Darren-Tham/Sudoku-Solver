@@ -1,5 +1,6 @@
 export const RED = '#ff928a'
-export const GREEN = '#b3ffc7'
+export const GREEN = '#82f57f'
+export const LIGHT_GREEN = '#b3ffc7'
 export const BLUE = '#c2e8ff'
 export const LIGHT_BLUE = '#e8f2fc'
 export const TEXT_BLUE = '#007cfa'

@@ -1,5 +1,6 @@
 :root{
   --block-size: 50px;
+  --margin-top: 30px;
 }
 
 body {  
@@ -40,7 +41,7 @@ button {
   border: none;
   color: white;
   background-color: #0072e2;
-  margin: 20px 20px 0 20px;
+  margin: var(--margin-top) 20px 0 20px;
   border-radius: 10px;
   cursor: pointer;
   letter-spacing: 0.5px;
@@ -48,4 +49,16 @@ button {
 
 button:hover {
   background-color: #006cd6;
+}
+
+.progress {
+  width: 500px;
+  border: 3px solid black;
+  border-radius: 20px;
+  margin-top: var(--margin-top);
+  overflow: hidden;
+}
+
+.bar {
+  height: 30px;
 }
