@@ -1,6 +1,6 @@
 :root{
-  --block-size: 50px;
-  --margin-top: 30px;
+  --block-size: 7vmin;
+  --margin: 3vmin;
 }
 
 body {  
@@ -29,22 +29,22 @@ input {
   caret-color: transparent;
   cursor: default;
   text-align: center;
-  font-size: 30px;
+  font-size: 4.25vmin;
   outline: none;
 }
 
 button {
-  width: 200px;
-  height: 100px;
-  font-family: sans-serif;
-  font-size: 25px;
+  width: 25vmin;
+  height: 10vmin;
+  font-family: sans-serif;  
+  font-size: 3.5vmin;
   border: none;
   color: white;
   background-color: #0072e2;
-  margin: var(--margin-top) 20px 0 20px;
-  border-radius: 10px;
+  margin: var(--margin) var(--margin) 0 var(--margin);
+  border-radius: 1.25vmin;
   cursor: pointer;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.075vmin;
 }
 
 button:hover {
@@ -52,13 +52,13 @@ button:hover {
 }
 
 .progress {
-  width: 500px;
-  border: 3px solid black;
-  border-radius: 20px;
-  margin-top: var(--margin-top);
+  width: 75vmin;
+  border: 0.35vmin solid black;
+  border-radius: 100vmin;
+  margin-top: 4vmin;
   overflow: hidden;
 }
 
 .bar {
-  height: 30px;
+  height: 4vmin;
 }

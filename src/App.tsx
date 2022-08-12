@@ -66,8 +66,8 @@ const testBoard = [
   ]
 ]
 
-const BLACK_BORDER = `3px solid ${BLACK}`
-const GRAY_BORDER = `1.5px solid ${GRAY}`
+const BLACK_BORDER = `0.35vmin solid ${BLACK}`
+const GRAY_BORDER = `0.175vmin solid ${GRAY}`
 
 interface Border {
   borderTop: string;
