@@ -9,8 +9,8 @@ In addition, the user can visualize the backtracking algorithm used to solve the
 This project helped me learn TypeScript with React!
 
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/704606226553634932/1007521993312186378/unknown.png" width=501>
-  <img src="https://cdn.discordapp.com/attachments/704606226553634932/1007522215140528169/unknown.png" width=500>
+  <img src="https://cdn.discordapp.com/attachments/704606226553634932/1007521993312186378/unknown.png" width=451>
+  <img src="https://cdn.discordapp.com/attachments/704606226553634932/1007522215140528169/unknown.png" width=450>
 </p>
 
 ## How To Use
