@@ -225,7 +225,10 @@ const App: React.FC = () => {
     })
   }, [values])
 
-  const highlightValues = useCallback((boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => {
+  const highlightValues = useCallback(() => {
+    if (lastIndices === undefined) return
+    const { boardRow, boardCol, sectionRow, sectionCol } = lastIndices
+
     const newColors = create4DArr(WHITE)
 
     for (let i = 0; i < SIZE; i++) {
@@ -251,7 +254,7 @@ const App: React.FC = () => {
         }
         return color
       })))))
-  }, [values, checkRows, checkCols, checkSections])
+  }, [values, lastIndices, checkRows, checkCols, checkSections])
 
   const handleMove = useCallback((dir: string) => {
     let newIndices: Indices | undefined
@@ -266,20 +269,30 @@ const App: React.FC = () => {
         }
         return false
       }))))
-
+    
     if (newIndices === undefined) {
       newAreSelected[0][0][0][0] = true
       inputRefs[0][0][0][0].current?.focus()
-      highlightValues(0, 0, 0, 0)
+      setLastIndices({
+        boardRow: 0,
+        boardCol: 0,
+        sectionRow: 0,
+        sectionCol: 0
+      })
     } else {
       const { boardRow, boardCol, sectionRow, sectionCol } = newIndices
       newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
       inputRefs[boardRow][boardCol][sectionRow][sectionCol].current?.focus()
-      highlightValues(boardRow, boardCol, sectionRow, sectionCol)
+      setLastIndices({
+        boardRow,
+        boardCol,
+        sectionRow,
+        sectionCol
+      })
     }
 
     setAreSelected(newAreSelected)
-  }, [inputRefs, areSelected, highlightValues])
+  }, [inputRefs, areSelected])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (isSolving) return
@@ -308,11 +321,7 @@ const App: React.FC = () => {
     }
   }, [handleMove, isSolving])
 
-  useEffect(() => {
-    if (lastIndices === undefined) return
-    const { boardRow, boardCol, sectionRow, sectionCol } = lastIndices
-    highlightValues(boardRow, boardCol, sectionRow, sectionCol)
-  }, [lastIndices, highlightValues])
+  useEffect(() => highlightValues(), [lastIndices, highlightValues])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -389,7 +398,7 @@ const App: React.FC = () => {
       return false
     }
 
-    if (numOfSteps === 0) {
+    if (numOfSteps === 0 || !isValidBoard()) {
       setProgressBarWidth(1)
     }
     
@@ -409,6 +418,7 @@ const App: React.FC = () => {
     } else {
       alert('This Sudoku board is not solvable!')
     }
+
     setProgressBarWidth(0)
     setTransitionTime(TIME)
     setIsSolving(false)
@@ -654,7 +664,6 @@ const App: React.FC = () => {
           areSelected={areSelected}
           setAreSelected={setAreSelected}
           setLastIndices={setLastIndices}
-          highlightValues={highlightValues}
           isSolving={isSolving}
         />
         

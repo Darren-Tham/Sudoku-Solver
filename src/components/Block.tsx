@@ -15,11 +15,10 @@ interface Props {
   areSelected: boolean[][][][];
   setAreSelected: React.Dispatch<React.SetStateAction<boolean[][][][]>>;
   setLastIndices: React.Dispatch<React.SetStateAction<Indices | undefined>>;
-  highlightValues: (boardRow: number, boardCol: number, sectionRow: number, sectionCol: number) => void
   isSolving: boolean
 }
 
-const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColors, setTextColors, areSelected, setAreSelected, setLastIndices, highlightValues, isSolving }): JSX.Element => {
+const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeable, indices, values, setValues, inputRef, color, textColors, setTextColors, areSelected, setAreSelected, setLastIndices, isSolving }): JSX.Element => {
   inputRef.current?.setSelectionRange(MAX_LEN, MAX_LEN)
 
   const { boardRow, boardCol, sectionRow, sectionCol } = indices
@@ -48,20 +47,20 @@ const Block: React.FC<Props> = ({ border: { borderTop, borderLeft }, isChangeabl
 
       setValues(newValues)
       setTextColors(newTextColors)
-      setLastIndices({
-        boardRow,
-        boardCol,
-        sectionRow,
-        sectionCol
-      })
     }
   }
 
   const handleClick = () => {
     const newAreSelected = create4DArr(false)
     newAreSelected[boardRow][boardCol][sectionRow][sectionCol] = true
+
     setAreSelected(newAreSelected)
-    highlightValues(boardRow, boardCol, sectionRow, sectionCol)
+    setLastIndices({
+      boardRow,
+      boardCol,
+      sectionRow,
+      sectionCol
+    })
   }
 
   return (
